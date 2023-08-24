@@ -1,2 +1,3 @@
 # vircon32-libretro
- libretro core for Vircon32
+Libretro core for Vircon32
+(still unfinished, description pending)

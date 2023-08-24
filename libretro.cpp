@@ -260,14 +260,22 @@ void context_reset()
     Console.SetCurrentDate( CreationTimeInfo->tm_year + 1900, CreationTimeInfo->tm_yday );
     Console.SetCurrentTime( CreationTimeInfo->tm_hour, CreationTimeInfo->tm_min, CreationTimeInfo->tm_sec );
     
-    // Look for BIOS in system directory
-    const char *SystemDirPath = 0;
-    environ_cb( RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &SystemDirPath );
-    Console.LoadBios( SystemDirPath + string("\\StandardBios.v32") );
-    
-    // load a cartridge if it was specified
-    if( !LoadedCartridgePath.empty() )
-      Console.LoadCartridge( LoadedCartridgePath );
+    // operations that load files may throw on failure
+    try
+    {
+        // Look for BIOS in system directory
+        const char *SystemDirPath = 0;
+        environ_cb( RETRO_ENVIRONMENT_GET_SYSTEM_DIRECTORY, &SystemDirPath );
+        Console.LoadBios( SystemDirPath + string("/StandardBios.v32") );
+        
+        // load a cartridge if it was specified
+        if( !LoadedCartridgePath.empty() )
+          Console.LoadCartridge( LoadedCartridgePath );
+    }
+    catch( const std::exception& e )
+    {
+        LOG( "ERROR: " + string( e.what() ) );
+    }
 }
 
 // -----------------------------------------------------------------------------

@@ -33,6 +33,7 @@ extern V32::V32Console Console;
 extern VideoOutput Video;
 extern V32::SPUOutputBuffer AudioBuffer;
 extern std::string LoadedCartridgePath;
+extern std::string LoadedMemoryCardPath;
 
 // libretro data structures
 extern struct retro_hw_render_callback hw_render;

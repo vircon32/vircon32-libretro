@@ -222,6 +222,59 @@ void retro_run()
 
 
 // =============================================================================
+//      AUXILIARY FUNCTIONS FOR FILE AND PATH HANDLING
+// =============================================================================
+
+
+bool FileExists( const string& FilePath )
+{
+    ifstream TestedFile;
+    TestedFile.open( FilePath );
+
+    return (bool)TestedFile;
+}
+
+// -----------------------------------------------------------------------------
+
+// determine the path of the memory card corresponding to a
+// given game path, taking into account the system save directory
+string GetMemoryCardPath( const string& CartridgePath )
+{
+    // step 1: determine the system's save path
+    const char *SaveDirectory = nullptr;
+	environ_cb( RETRO_ENVIRONMENT_GET_SAVE_DIRECTORY, &SaveDirectory );
+    
+    // step 2: unify path separators to forward slashes
+    string SaveDirectoryUnified = SaveDirectory;
+    for( auto& c: SaveDirectoryUnified )
+      if( c == '\\' )
+        c = '/';
+    
+    string CartridgePathUnified = CartridgePath;
+    for( auto& c: CartridgePathUnified )
+      if( c == '\\' )
+        c = '/';
+    
+    // step 2: isolate the file name
+    size_t SlashPosition = CartridgePathUnified.rfind( '/' );
+    string FileName;
+    
+    if( SlashPosition == string::npos )
+      FileName = CartridgePathUnified;
+    else
+      FileName = CartridgePathUnified.substr( SlashPosition + 1, CartridgePathUnified.size() - 1 );
+    
+    // step 3: replace or add the file extension
+    size_t DotPosition = FileName.rfind( '.' );
+    
+    if( DotPosition == string::npos )
+      return SaveDirectoryUnified + "/" + FileName + ".memc";
+    else
+      return SaveDirectoryUnified + "/" + FileName.substr( 0, DotPosition ) + ".memc";
+}
+
+
+// =============================================================================
 //      HANDLING CONTEXT FOR CORE AND OPENGL
 // =============================================================================
 
@@ -270,9 +323,22 @@ void context_reset()
         
         // load a cartridge if it was specified
         if( !LoadedCartridgePath.empty() )
-          Console.LoadCartridge( LoadedCartridgePath );
+        {
+            Console.LoadCartridge( LoadedCartridgePath );
+            
+            // also load the corresponding memory card if existing
+            if( FileExists( LoadedMemoryCardPath ) )
+              Console.LoadMemoryCard( LoadedMemoryCardPath );
+            
+            // otherwise create an empty card and load it
+            else
+            {
+                Console.CreateMemoryCard( LoadedMemoryCardPath );
+                Console.LoadMemoryCard( LoadedMemoryCardPath );
+            }
+        }
     }
-    catch( const std::exception& e )
+    catch( const exception& e )
     {
         LOG( "ERROR: " + string( e.what() ) );
     }
@@ -426,8 +492,11 @@ bool retro_load_game( const struct retro_game_info *info )
     // case 1: core loaded with a game
     if( info && info->path )
     {
-        LOG( std::string("Core loaded with game: ") + info->path );
+        LOG( string("Core loaded with game: ") + info->path );
         LoadedCartridgePath = info->path;
+        
+        // build a path for the game's memory card
+        LoadedMemoryCardPath = GetMemoryCardPath( LoadedCartridgePath );
     }
     
     // case 2: core loaded with no game
@@ -446,6 +515,7 @@ bool retro_load_game( const struct retro_game_info *info )
 void retro_unload_game()
 {
     Console.UnloadCartridge();
+    Console.UnloadMemoryCard();
 }
 
 // -----------------------------------------------------------------------------
@@ -461,36 +531,22 @@ bool retro_load_game_special( unsigned type, const struct retro_game_info *info,
 
 
 // =============================================================================
-//      HANDLING SAVED GAMES (PENDING)
+//      HANDLING INTERNAL MEMORY (NOT SUPPORTED)
 // =============================================================================
 
 
 void *retro_get_memory_data( unsigned id )
 {
-    //uint8_t *data;
-    //switch(id)
-    //case RETRO_MEMORY_SAVE_RAM:
-    //data = Memory.SRAM;
-    //break;
-    
-    // not implemented: state serialization is not supported
+    // not implemented
     (void)id;
-    return NULL;
+    return nullptr;
 }
 
 // -----------------------------------------------------------------------------
 
 size_t retro_get_memory_size( unsigned id )
 {
-    /*
-    switch (type)
-    {
-        case RETRO_MEMORY_SAVE_RAM:
-          return V32::Constants::MemoryCardRAMSize;
-        default:
-          return 0;
-    }*/
-    (void)id;
+    // not implemented
     return 0;
 }
 

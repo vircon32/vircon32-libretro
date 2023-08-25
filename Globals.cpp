@@ -24,6 +24,7 @@ V32::V32Console Console;
 VideoOutput Video;
 V32::SPUOutputBuffer AudioBuffer;
 string LoadedCartridgePath;
+string LoadedMemoryCardPath;
 
 // libretro data structures
 struct retro_hw_render_callback hw_render;

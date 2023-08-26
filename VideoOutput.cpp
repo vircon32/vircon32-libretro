@@ -7,6 +7,9 @@
     #include "Globals.hpp"
     #include "Logging.hpp"
     
+    // include C/C++ headers
+    #include <cstring>          // [ ANSI C ] Strings
+    
     // declare used namespaces
     using namespace std;
     using namespace V32;

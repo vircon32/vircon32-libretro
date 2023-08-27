@@ -363,6 +363,8 @@ bool retro_init_hw_context()
     // HW context info dependent on the device
     #if HAVE_OPENGLES2
       hw_render.context_type = RETRO_HW_CONTEXT_OPENGLES2;
+    #elseif HAVE_OPENGLES3
+      hw_render.context_type = RETRO_HW_CONTEXT_OPENGLES3;
     #else
       hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
       hw_render.version_major = 3;

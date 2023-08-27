@@ -51,6 +51,11 @@ void ClearOpenGLErrors()
 
 // -----------------------------------------------------------------------------
 
+// these OpenGL constants may not defined in some systems
+#define GL_STACK_OVERFLOW  0x0503
+#define GL_STACK_UNDERFLOW 0x0504
+#define GL_TABLE_TOO_LARGE 0x8031
+
 // use this instead of gluErrorString: it is easy to
 // implement, and allows us to not depend on GLU/GLUT
 string GLErrorString( GLenum ErrorCode )

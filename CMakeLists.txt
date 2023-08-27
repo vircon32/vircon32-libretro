@@ -39,8 +39,8 @@ include_directories(.)
 # On ARM systems (typically phones, RPi, or embedded devices)
 # use OpenGL ES; for other systems just use OpenGL core profile
 if(${CMAKE_SYSTEM_PROCESSOR} MATCHES "arm")
-    set(GLSYM_SRC glsym/rglgen.c glsym/glsym_es2.c)
-    set(USE_OPENGLES 1)
+    set(GLSYM_SRC glsym/rglgen.c glsym/glsym_es3.c)
+    set(USE_OPENGLES3 1)
 else()
     set(GLSYM_SRC glsym/rglgen.c glsym/glsym_gl.c)
 endif()
@@ -64,8 +64,10 @@ add_library(${CORE_BINARY_NAME} SHARED
 set_property(TARGET ${CORE_BINARY_NAME} PROPERTY CXX_STANDARD 11)
 
 # The code needs this preprocessor variable
-if(USE_OPENGLES)
+if(USE_OPENGLES2)
     target_compile_definitions(${CORE_BINARY_NAME} PUBLIC HAVE_OPENGLES2=1)
+elseif(USE_OPENGLES3)
+    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC HAVE_OPENGLES3=1)
 endif()
 
 # Libraries to link to the core

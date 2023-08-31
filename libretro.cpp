@@ -361,14 +361,14 @@ bool retro_init_hw_context()
     LOG( "Received signal: Init HW context" );
     
     // HW context info dependent on the device
-    #if HAVE_OPENGLES2
+    #if defined(HAVE_OPENGLES2)
       hw_render.context_type = RETRO_HW_CONTEXT_OPENGLES2;
-    #elseif HAVE_OPENGLES3
+    #elif defined(HAVE_OPENGLES3)
       hw_render.context_type = RETRO_HW_CONTEXT_OPENGLES3;
     #else
       hw_render.context_type = RETRO_HW_CONTEXT_OPENGL_CORE;
       hw_render.version_major = 3;
-      hw_render.version_minor = 1;
+      hw_render.version_minor = 0;
     #endif
     
     // fixed HW context details
@@ -505,7 +505,7 @@ bool retro_load_game( const struct retro_game_info *info )
     // (the console will run the BIOS)
     else
     {
-        LOG( "Core laded with no game" );
+        LOG( "Core loaded with no game" );
         LoadedCartridgePath = "";
     }
     

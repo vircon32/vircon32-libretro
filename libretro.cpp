@@ -285,8 +285,6 @@ void context_reset()
     rglgen_resolve_symbols( hw_render.get_proc_address );
     
     // initialize video output
-    Video.CompileShaderProgram();
-    Video.CreateWhiteTexture();
     Video.InitRendering();
     
     // set console's video callbacks

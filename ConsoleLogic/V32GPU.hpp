@@ -83,7 +83,7 @@ namespace V32
             
             // textures loaded into GPU
             GPUTexture BiosTexture;
-            GPUTexture CartridgeTextures[ Constants::GPUMaximumCartridgeTextures ];
+            std::vector< GPUTexture > CartridgeTextures;    // do not use a plain array: it is too large to hold in stack
             unsigned LoadedCartridgeTextures;
             
             // accessors to active entities
@@ -110,15 +110,6 @@ namespace V32
             
             // quad coordinated for drawing regions
             GPUQuad RegionQuad;
-            
-            // external interfaces: video function callbacks
-            void( *Callback_ClearScreen )( GPUColor );
-            void( *Callback_DrawQuad )( GPUQuad& );
-            void( *Callback_SetMultiplyColor )( GPUColor );
-            void( *Callback_SetBlendingMode )( int );
-            void( *Callback_SelectTexture )( int );
-            void( *Callback_LoadTexture )( int, void* );
-            void( *Callback_UnloadCartridgeTextures )();
             
         public:
             

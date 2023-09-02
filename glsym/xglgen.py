@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-   License statement applies to this file (glgen.py) only.
+   License statement applies to this file (xglgen.py) only.
 
    Permission is hereby granted, free of charge,
    to any person obtaining a copy of this software and associated documentation files (the "Software"),
@@ -54,12 +54,13 @@ def find_gl_symbols(lines):
    typedefs = []
    syms = []
    for line in lines:
+      # Note this doesn't work automated; this script is designed as a helper
       m = re.search(r'^typedef.+PFN(\S+)PROC.+$', line)
-      g = re.search(r'^.+(gl\S+)\W*\(.+\).*$', line)
-      if m and noext(m.group(1)):
-         typedefs.append(m.group(0).replace('PFN', 'RGLSYM').replace('GLDEBUGPROC', 'RGLGENGLDEBUGPROC'))
-      if g and noext(g.group(1)):
-         syms.append(g.group(1))
+      g = re.search(r'^GLAPI\s(.+)\s(.+)\s(gl\S+)\W*\((.+)\).*', line)
+      if g and noext(g.group(3)):
+         typedefs.append('typedef ' + g.group(1) + ' (APIENTRYP RGLSYM' + g.group(3).upper() + 'PROC) (' + g.group(4) + ');')
+         syms.append(g.group(3))
+
    return (typedefs, syms)
 
 def generate_defines(gl_syms):
@@ -69,7 +70,7 @@ def generate_defines(gl_syms):
    return res
 
 def generate_declarations(gl_syms):
-   return ['RGLSYM' + x.upper() + 'PROC ' + '__rglgen_' + x + ';' for x in gl_syms]
+   return ['RGLSYM' + x.upper() + 'PROC ' + x + ';' for x in gl_syms]
 
 def generate_macros(gl_syms):
    return ['    SYM(' + x.replace('gl', '') + '),' for x in gl_syms]

@@ -1,4 +1,4 @@
-/* Copyright  (C) 2010-2016 The RetroArch team
+/* Copyright  (C) 2010-2020 The RetroArch team
  *
  * ---------------------------------------------------------------------------------------
  * The following license statement only applies to this file (retro_common_api.h).
@@ -25,14 +25,14 @@
 
 /*
 This file is designed to normalize the libretro-common compiling environment
-for public API headers. This should be leaner than a normal compiling environment, 
+for public API headers. This should be leaner than a normal compiling environment,
 since it gets #included into other project's sources.
 */
 
 /* ------------------------------------ */
 
 /*
-Ordinarily we want to put #ifdef __cplusplus extern "C" in C library 
+Ordinarily we want to put #ifdef __cplusplus extern "C" in C library
 headers to enable them to get used by c++ sources.
 However, we want to support building this library as C++ as well, so a
 special technique is called for.
@@ -75,18 +75,50 @@ typedef int ssize_t;
 #include <sys/types.h>
 #endif
 
-#ifdef _WIN32
-#define STRING_REP_INT64  "%I64u"
-#define STRING_REP_UINT64 "%I64u"
-#define STRING_REP_ULONG  "%Iu"
-#elif defined(__STDC_VERSION__) && __STDC_VERSION__>=199901L
-#define STRING_REP_INT64  "%llu"
-#define STRING_REP_UINT64 "%llu"
-#define STRING_REP_ULONG  "%zu"
+#ifdef _MSC_VER
+#if _MSC_VER >= 1800
+#include <inttypes.h>
 #else
-#define STRING_REP_INT64  "%llu"
-#define STRING_REP_UINT64 "%llu"
-#define STRING_REP_ULONG  "%lu"
+#ifndef PRId64
+#define PRId64 "I64d"
+#define PRIu64 "I64u"
+#define PRIuPTR "Iu"
+#endif
+#endif
+#else
+/* C++11 says this one isn't needed, but apparently (some versions of) mingw require it anyways */
+/* https://stackoverflow.com/questions/8132399/how-to-printf-uint64-t-fails-with-spurious-trailing-in-format */
+/* https://github.com/libretro/RetroArch/issues/6009 */
+#ifndef __STDC_FORMAT_MACROS
+#define __STDC_FORMAT_MACROS 1
+#endif
+#include <inttypes.h>
+#endif
+#ifndef PRId64
+#error "inttypes.h is being screwy"
+#endif
+#define STRING_REP_INT64 "%" PRId64
+#define STRING_REP_UINT64 "%" PRIu64
+#define STRING_REP_USIZE "%" PRIuPTR
+
+/* Wrap a declaration in RETRO_DEPRECATED() to produce a compiler warning when
+it's used. This is intended for developer machines, so it won't work on ancient
+or obscure compilers */
+#if defined(_MSC_VER)
+#if _MSC_VER >= 1400 /* Visual C 2005 or later */
+#define RETRO_DEPRECATED(decl) __declspec(deprecated) decl
+#endif
+#elif defined(__GNUC__)
+#if __GNUC__ >= 3 /* GCC 3 or later */
+#define RETRO_DEPRECATED(decl) decl __attribute__((deprecated))
+#endif
+#elif defined(__clang__)
+#if __clang_major__ >= 3 /* clang 3 or later */
+#define RETRO_DEPRECATED(decl) decl __attribute__((deprecated))
+#endif
+#endif
+#ifndef RETRO_DEPRECATED /* Unsupported compilers */
+#define RETRO_DEPRECATED(decl) decl
 #endif
 
 /*
@@ -102,7 +134,6 @@ then you should pay the price everywhere, so you can see how much grief it will 
 Of course, another school of thought is that you should do as little damage as possible
 in as few places as possible...
 */
-
 
 /* _LIBRETRO_COMMON_RETRO_COMMON_API_H */
 #endif

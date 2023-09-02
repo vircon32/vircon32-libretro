@@ -444,6 +444,7 @@ void VideoOutput::BeginFrame()
 {
     UseShaderProgram();
     RenderToFramebuffer();
+    glEnable( GL_BLEND );
     SetBlendingMode( BlendingMode );
 }
 

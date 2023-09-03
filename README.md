@@ -13,7 +13,7 @@ cmake ..
 make
 ```
 
-After compiling, to install the shared library into your libretro frontend (using `"/home/${USER}/.config/retroarch/cores"` as default):
+After compiling, to install the shared library into your libretro frontend (using `/home/${USER}/.config/retroarch/cores` as default):
 
 ```
 sudo make install

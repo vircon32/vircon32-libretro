@@ -86,3 +86,14 @@ endif()
 
 # Disable any unwanted prefix for the final library
 set_target_properties(${CORE_BINARY_NAME} PROPERTIES PREFIX "")
+
+# Disable any unwanted prefix for the final library
+set_target_properties(${CORE_BINARY_NAME} PROPERTIES PREFIX "")
+
+# Set retroarch cores installation directory
+set(INSTALL_DIR "/home/${USER}/.config/retroarch/cores")
+
+# Install the shared library to the specified directory
+install(TARGETS ${CORE_BINARY_NAME}
+    LIBRARY DESTINATION ${INSTALL_DIR}
+)

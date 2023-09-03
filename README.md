@@ -7,9 +7,17 @@ This is a libretro core for Vircon32. It will allow you to play Vircon32 games u
 
 This core is build with CMake, so the typical sequence is to build the library in a subfolder like this:
 
+```
 cd build
 cmake ..
 make
+```
+
+After compilation, install the shared library into your libretro front-end directory (set default directory as `/home/${USER}/.config/retroarch/cores`) using:
+
+```
+sudo make install
+```
 
 Under Windows, you will need this to build with MinGW toolchain:
 

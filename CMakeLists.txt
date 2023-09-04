@@ -87,13 +87,29 @@ endif()
 # Disable any unwanted prefix for the final library
 set_target_properties(${CORE_BINARY_NAME} PROPERTIES PREFIX "")
 
-# Disable any unwanted prefix for the final library
-set_target_properties(${CORE_BINARY_NAME} PROPERTIES PREFIX "")
+# -----------------------------------------------------
+#   DEFINE INSTALL PROCESS
 
-# Set retroarch cores installation directory
-set(INSTALL_DIR "/home/${USER}/.config/retroarch/cores")
+# Detect architecture bits
+if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+    set(TARGET_BITS "64")
+elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+    set(TARGET_BITS "32")
+endif()
+
+# Install directory will depend on the operating system
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+    if(TARGET_BITS MATCHES "64")
+        set(INSTALL_DIR "C:/Program Files/RetroArch/cores")
+    else()
+        set(INSTALL_DIR "C:/Program Files (x86)/RetroArch/cores")
+    endif()
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+    set(INSTALL_DIR "/home/${USER}/.config/retroarch/cores")
+elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+    set(INSTALL_DIR "/Users/${USER}/Library/Application Support/RetroArch/cores")
+endif()
 
 # Install the shared library to the specified directory
 install(TARGETS ${CORE_BINARY_NAME}
-    LIBRARY DESTINATION ${INSTALL_DIR}
-)
+    DESTINATION ${INSTALL_DIR})

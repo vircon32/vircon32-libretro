@@ -5,7 +5,7 @@ This is a libretro core for Vircon32. It will allow you to play Vircon32 games u
 ----------------------------------
 ### How to build from source code
 
-This core is build with CMake, so the typical sequence is to build the library in a subfolder like this:
+This core is built using CMake, so the typical sequence is to build the library in a subfolder like this:
 
 ```
 cd build
@@ -13,15 +13,17 @@ cmake ..
 make
 ```
 
-After compilation, install the shared library into your libretro front-end directory (set default directory as `/home/${USER}/.config/retroarch/cores`) using:
+Under Windows, if you build with MinGW toolchain you will have to modify the CMake command to this:
 
 ```
-sudo make install
-```
-
-Under Windows, you will need this to build with MinGW toolchain:
-
 cmake -G 'MSYS Makefiles' ..
+```
+
+After the build succeeds, to use the core in RetroArch you will have to either copy the resulting shared library into your cores directory. You can do that manually or install to the default directory using this command. Note that in Linux/Mac systems you may have to use sudo.
+
+```
+make install
+```
 
 --------------------------------------
 ### Targeting other versions of OpenGL

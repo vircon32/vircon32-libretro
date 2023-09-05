@@ -105,9 +105,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
         set(INSTALL_DIR "C:/Program Files (x86)/RetroArch/cores")
     endif()
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-    set(INSTALL_DIR "/home/${USER}/.config/retroarch/cores")
+    set(INSTALL_DIR "/home/$ENV{USER}/.config/retroarch/cores")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(INSTALL_DIR "/Users/${USER}/Library/Application Support/RetroArch/cores")
+    set(INSTALL_DIR "/Users/$ENV{USER}/Library/Application\ Support/RetroArch/cores")
 endif()
 
 # Install the shared library to the specified directory

@@ -19,17 +19,21 @@ set(CORE_BINARY_NAME "vircon32_libretro")
 # -----------------------------------------------------
 #   FINDING PROJECT DEPENDENCIES
 
-# EmuELEC build environment automatically checks presence of OpenGL
-if(NOT PLATFORM STREQUAL "EMUELEC")
-# Try to find OpenGL along with everything it needs
-find_package(OpenGL REQUIRED)
-
-# Report whether it was found
-if(OPENGL_FOUND OR OPENGL_LIBRARY OR OPENGL_BUNDLED)
-    message(STATUS "* OPENGL found")
+# Check for OpenGL, the only dependency of this core
+# (EmuELEC build environment automatically does this)
+if(PLATFORM STREQUAL "EMUELEC")
+    message(STATUS "* OPENGL to be found bi EmuELEC")
+    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC EMUELEC=1)
 else()
-    message(SEND_ERROR "* OPENGL not found")
-endif()
+    # Try to find OpenGL along with everything it needs
+    find_package(OpenGL REQUIRED)
+    
+    # Report whether it was found
+    if(OPENGL_FOUND OR OPENGL_LIBRARY OR OPENGL_BUNDLED)
+        message(STATUS "* OPENGL found")
+    else()
+        message(SEND_ERROR "* OPENGL not found")
+    endif()
 endif()
 
 # -----------------------------------------------------

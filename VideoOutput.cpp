@@ -300,12 +300,12 @@ void VideoOutput::InitRendering()
     
     // on a core OpenGL profile, we need this since
     // the default VAO is not valid!
-    #if PLATFORM == EMUELEC
-    glGenVertexArraysOES( 1, &VAO );
-    glBindVertexArrayOES( VAO );
+    #if defined(EMUELEC)
+      glGenVertexArraysOES( 1, &VAO );
+      glBindVertexArrayOES( VAO );
     #else
-    glGenVertexArrays( 1, &VAO );
-    glBindVertexArray( VAO );
+      glGenVertexArrays( 1, &VAO );
+      glBindVertexArray( VAO );
     #endif
     
     // we will also need this for a core OpenGL

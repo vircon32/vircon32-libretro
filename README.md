@@ -25,6 +25,21 @@ After the build succeeds, to use the core in RetroArch you will have to either c
 make install
 ```
 
+In [EmuELEC](https://github.com/EmuELEC/EmuELEC) You must build `libretro-vircon32` their environment by cloning its repository:
+
+```
+git clone -b master https://github.com/EmuELEC/EmuELEC.git
+cd EmuELEC
+```
+
+Copy and paste the file [package.mk](emuelec/package.mk) included here to path `packages/emulation/libretro-vircon32/package.mk` inside EmuELEC repository and run:
+
+```
+PROJECT=<your_platform> DEVICE=<your_device> ARCH=aarch64 DISTRO=EmuELEC ./scripts/build libretro-vircon32
+```
+
+copy the `vircon32_libretro.so` file into emuELEC `core` folder, and its BIOS into `bios` folder.
+
 --------------------------------------
 ### Targeting other versions of OpenGL
 

@@ -19,6 +19,8 @@ set(CORE_BINARY_NAME "vircon32_libretro")
 # -----------------------------------------------------
 #   FINDING PROJECT DEPENDENCIES
 
+# EmuELEC build environment automatically checks presence of OpenGL
+if(NOT PLATFORM STREQUAL "EMUELEC")
 # Try to find OpenGL along with everything it needs
 find_package(OpenGL REQUIRED)
 
@@ -27,6 +29,7 @@ if(OPENGL_FOUND OR OPENGL_LIBRARY OR OPENGL_BUNDLED)
     message(STATUS "* OPENGL found")
 else()
     message(SEND_ERROR "* OPENGL not found")
+endif()
 endif()
 
 # -----------------------------------------------------
@@ -79,8 +82,8 @@ target_link_libraries(${CORE_BINARY_NAME}
     V32ConsoleLogic
     ${OPENGL_LIBRARIES})
 
-# For gcc/MinGW we need to have the C/C++ std libs as part of the final library
-if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+# For gcc/MinGW we need to have the C/C++ std libs as part of the final library, not valid for aarch64 emuelec core build
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT PLATFORM STREQUAL "EMUELEC")
     target_link_options(${CORE_BINARY_NAME} PRIVATE -static-libgcc -static-libstdc++)
 endif()
 

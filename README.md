@@ -32,7 +32,7 @@ git clone -b master https://github.com/EmuELEC/EmuELEC.git
 cd EmuELEC
 ```
 
-Copy and paste the [package.mk](emuelec_package.mk) file into `packages/emulation/libretro-vircon32/package.mk` inside EmuELEC repository and run:
+Copy and paste the file [package.mk](emuelec/package.mk) included here to path `packages/emulation/libretro-vircon32/package.mk` inside EmuELEC repository and run:
 
 ```
 PROJECT=<your_platform> DEVICE=<your_device> ARCH=aarch64 DISTRO=EmuELEC ./scripts/build libretro-vircon32

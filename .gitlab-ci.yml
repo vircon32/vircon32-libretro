@@ -1,0 +1,206 @@
+# DESCRIPTION: GitLab CI/CD for libRetro (NOT FOR GitLab-proper)
+
+##############################################################################
+################################# BOILERPLATE ################################
+##############################################################################
+
+# Core definitions
+.core-defs:
+  variables:
+    CORENAME: vircon32
+    CORE_ARGS: -DCMAKE_BUILD_TYPE=Release
+
+.core-defs-osx:
+  extends: .core-defs
+  variables:
+    CORE_ARGS: -DCMAKE_BUILD_TYPE=Release -G Xcode
+    EXTRA_PATH: Release
+
+.core-defs-gles2:
+  extends: .core-defs
+  variables:
+    ENABLE_OPENGLES2: 1
+
+.core-defs-gles3:
+  extends: .core-defs
+  variables:
+    ENABLE_OPENGLES3: 1
+
+# Inclusion templates, required for the build to work
+include:
+  ################################## DESKTOPS ################################
+  # Windows
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/windows-cmake-mingw.yml'
+
+  # DJGPP
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/djgpp-static-cmake.yml'
+
+  # MacOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: 'osx-cmake-x86.yml'
+
+  # MacOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: 'osx-cmake-arm64.yml'
+
+  # MacOS (PPC)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: 'osx-cmake-ppc.yml'
+
+  # Linux
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/linux-cmake.yml'
+
+  ################################## CELLULAR ################################
+  # Android
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/android-cmake.yml'
+
+  # iOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/ios-cmake.yml'
+
+  ################################## CONSOLES ################################
+  # Libnx (Nintendo Switch)
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/libnx-static-cmake.yml'
+
+  # tvOS
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/tvos-cmake.yml'
+
+  # Nintendo 3DS and PSP: Omitted
+  # (not enough screen resolution for Vircon32)
+
+  # PS2, PSVita, GameCube, Wii and WiiU: Omitted
+  # (they don't seem to support standard OpenGL)
+
+  ################################## MISC ####################################
+  # Emscripten
+  - project: 'libretro-infrastructure/ci-templates'
+    file: '/emscripten-static-cmake.yml'
+
+# Stages for building
+stages:
+  - build-prepare
+  - build-shared
+  - build-static
+
+##############################################################################
+#################################### STAGES ##################################
+##############################################################################
+#
+################################### DESKTOPS #################################
+# Windows 64-bit
+libretro-build-windows-x64:
+  extends:
+    - .libretro-windows-cmake-x86_64
+    - .core-defs
+
+# Windows 32-bit
+libretro-build-windows-i686:
+  extends:
+    - .libretro-windows-cmake-x86
+    - .core-defs
+
+# DJGPP
+libretro-build-djgpp-i586:
+  extends:
+    - .libretro-djgpp-static-cmake-retroarch-master
+    - .core-defs
+
+# Linux 64-bit
+libretro-build-linux-x64:
+  extends:
+    - .libretro-linux-cmake-x86_64
+    - .core-defs
+
+# Linux 32-bit
+libretro-build-linux-i686:
+  extends:
+    - .libretro-linux-cmake-x86
+    - .core-defs
+
+# MacOS 32-bit
+libretro-build-osx-x86:
+  extends:
+    - .libretro-osx-cmake-x86
+    - .core-defs-osx
+
+# MacOS 64-bit
+libretro-build-osx-x64:
+  extends:
+    - .libretro-osx-cmake-x86_64
+    - .core-defs-osx
+
+# MacOS ARM64
+libretro-build-osx-arm64:
+  extends:
+    - .libretro-osx-cmake-arm64
+    - .core-defs-osx
+
+# MacOS PPC
+libretro-build-osx-ppc:
+  extends:
+    - .libretro-osx-cmake-ppc
+    - .core-defs
+
+################################### CELLULAR #################################
+# Android ARMv7a
+android-armeabi-v7a:
+  extends:
+    - .libretro-android-cmake-armeabi-v7a
+    - .core-defs-gles3
+
+# Android ARMv8a
+android-arm64-v8a:
+  extends:
+    - .libretro-android-cmake-arm64-v8a
+    - .core-defs-gles3
+
+# Android 64-bit x86
+android-x86_64:
+  extends:
+    - .libretro-android-cmake-x86_64
+    - .core-defs-gles3
+
+# Android 32-bit x86
+android-x86:
+  extends:
+    - .libretro-android-cmake-x86
+    - .core-defs-gles3
+
+# iOS arm64
+libretro-build-ios-arm64:
+  extends:
+    - .libretro-ios-cmake-arm64
+    - .core-defs-gles3
+
+################################### CONSOLES #################################
+# Libnx (Nintendo Switch)
+libretro-build-libnx-aarch64:
+  extends:
+    - .libretro-libnx-static-cmake-retroarch-master
+    - .core-defs
+
+# tvOS
+libretro-build-tvos-arm64:
+  extends:
+    - .libretro-tvos-cmake-arm64
+    - .core-defs-gles3
+
+# Nintendo 3DS and PSP: Omitted
+# (not enough screen resolution for Vircon32)
+
+# PS2, PSVita, GameCube, Wii and WiiU: Omitted
+# (they don't seem to support standard OpenGL)
+
+################################### MISC #####################################
+
+# Emscripten
+libretro-build-emscripten:
+  extends:
+    - .libretro-emscripten-static-cmake-retroarch-master
+    - .core-defs-gles2

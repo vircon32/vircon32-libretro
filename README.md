@@ -13,6 +13,12 @@ cmake ..
 make
 ```
 
+If you want to cross build for Android, you will need to have the NDK installed, and provide CMake with some more variables. The Android build will automatically use OpenGL ES 3. The CMake command will look like this:
+
+```
+cmake -DANDROID_ABI=arm64-v8a -DANDROID_NDK=<your_ndk_folder> -DCMAKE_TOOLCHAIN_FILE=<your_ndk_folder>/build/cmake/android.toolchain.cmake ..
+```
+
 Under Windows, if you build with MinGW toolchain you will have to modify the CMake command to this:
 
 ```

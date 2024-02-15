@@ -191,7 +191,7 @@ bool VideoOutput::CompileShaderProgram()
         glGetShaderInfoLog( VertexShaderID, GLInfoLogLength, nullptr, GLInfoLog );    
         
         LOG( string("ERROR: Vertex shader compilation failed: ") + (char*)GLInfoLog );
-        delete GLInfoLog;
+        delete[] GLInfoLog;
         
         glDeleteShader( VertexShaderID );
         VertexShaderID = 0;
@@ -217,7 +217,7 @@ bool VideoOutput::CompileShaderProgram()
         glGetShaderInfoLog( FragmentShaderID, GLInfoLogLength, nullptr, GLInfoLog );    
         
         LOG( string("ERROR: Fragment shader compilation failed: ") + (char*)GLInfoLog );
-        delete GLInfoLog;
+        delete[] GLInfoLog;
         
         glDeleteShader( VertexShaderID );
         glDeleteShader( FragmentShaderID );
@@ -245,7 +245,7 @@ bool VideoOutput::CompileShaderProgram()
         glGetShaderInfoLog( ShaderProgramID, GLInfoLogLength, nullptr, GLInfoLog );    
         
         LOG( string("ERROR: Linking shader program failed: ") + (char*)GLInfoLog );
-        delete GLInfoLog;
+        delete[] GLInfoLog;
         
         glDeleteShader( VertexShaderID );
         glDeleteShader( FragmentShaderID );

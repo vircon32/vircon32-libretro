@@ -10,12 +10,6 @@
     CORENAME: vircon32
     CORE_ARGS: -DCMAKE_BUILD_TYPE=Release
 
-.core-defs-osx:
-  extends: .core-defs
-  variables:
-    CORE_ARGS: -DCMAKE_BUILD_TYPE=Release -G Xcode
-    EXTRA_PATH: Release
-
 .core-defs-gles2:
   extends: .core-defs
   variables:
@@ -127,25 +121,25 @@ libretro-build-linux-i686:
 libretro-build-osx-x86:
   extends:
     - .libretro-osx-cmake-x86
-    - .core-defs-osx
+    - .core-defs
 
 # MacOS 64-bit
 libretro-build-osx-x64:
   extends:
     - .libretro-osx-cmake-x86_64
-    - .core-defs-osx
+    - .core-defs
 
 # MacOS ARM64
 libretro-build-osx-arm64:
   extends:
     - .libretro-osx-cmake-arm64
-    - .core-defs-osx
+    - .core-defs
 
 # MacOS PPC
-libretro-build-osx-ppc:
-  extends:
-    - .libretro-osx-cmake-ppc
-    - .core-defs
+# libretro-build-osx-ppc:
+#   extends:
+#     - .libretro-osx-cmake-ppc
+#     - .core-defs
 
 ################################### CELLULAR #################################
 # Android ARMv7a

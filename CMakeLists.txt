@@ -28,6 +28,8 @@ elseif(ANDROID_ABI)
     message(STATUS "* OPENGL ES 3 will be provided by Android")
     set(ENABLE_OPENGLES3 1)
     set(OPENGL_LIBRARIES GLESv3)
+elseif(IOS)
+    set(ENABLE_OPENGLES3 1)
 else()
     # Try to find OpenGL along with everything it needs
     find_package(OpenGL REQUIRED)
@@ -89,6 +91,9 @@ endif()
 target_link_libraries(${CORE_BINARY_NAME}
     V32ConsoleLogic
     ${OPENGL_LIBRARIES})
+if(IOS)
+    target_link_options(${CORE_BINARY_NAME} PRIVATE -framework OpenGLES)
+endif()
 
 # For gcc/MinGW we need to have the C/C++ std libs as part of the final library, not valid for aarch64 emuelec core build
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT PLATFORM STREQUAL "EMUELEC")

@@ -696,7 +696,8 @@ void VideoOutput::UnloadTexture( int GPUTextureID )
     if( GPUTextureID >= 0 )
       OpenGLTextureID = &CartridgeTextureIDs[ GPUTextureID ];
     
-    glDeleteTextures( 1, OpenGLTextureID );
+    if (*OpenGLTextureID != 0)
+      glDeleteTextures( 1, OpenGLTextureID );
     *OpenGLTextureID = 0;
 }
 

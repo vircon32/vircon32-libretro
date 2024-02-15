@@ -24,12 +24,19 @@ set(CORE_BINARY_NAME "vircon32_libretro")
 if(PLATFORM STREQUAL "EMUELEC")
     message(STATUS "* OPENGL to be found bi EmuELEC")
     target_compile_definitions(${CORE_BINARY_NAME} PUBLIC EMUELEC=1)
+    
+# for Android we will automatically link against GLES3
+# and avoid trying to find OpenGL the normal way
 elseif(ANDROID_ABI)
     message(STATUS "* OPENGL ES 3 will be provided by Android")
     set(ENABLE_OPENGLES3 1)
     set(OPENGL_LIBRARIES GLESv3)
+    
+# for IOS we will also link against GLES3, but in a different way
 elseif(IOS)
     set(ENABLE_OPENGLES3 1)
+
+# for other systems we need to search for OpenGL
 else()
     # Try to find OpenGL along with everything it needs
     find_package(OpenGL REQUIRED)

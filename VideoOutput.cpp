@@ -696,8 +696,11 @@ void VideoOutput::UnloadTexture( int GPUTextureID )
     if( GPUTextureID >= 0 )
       OpenGLTextureID = &CartridgeTextureIDs[ GPUTextureID ];
     
-    if (*OpenGLTextureID != 0)
+    // this check should not be needed, but for some reason
+    // glDeleteTextures will crash on MacOS without it
+    if( *OpenGLTextureID != 0 )
       glDeleteTextures( 1, OpenGLTextureID );
+    
     *OpenGLTextureID = 0;
 }
 

@@ -57,8 +57,10 @@ Then copy the `vircon32_libretro.so` file into emuELEC `core` folder, and its BI
 
 This core uses OpenGL for graphics. The default build command shown above will make the core use OpenGL Core profile. But in some other systems you may need to use OpenGL ES 2 or 3. To target those, use these variables when running CMake:
 
-For OpenGL ES 2: cmake -D ENABLE_OPENGLES2=1 ..
-For OpenGL ES 3: cmake -D ENABLE_OPENGLES3=1 ..
+For OpenGL ES 2: cmake -DENABLE_OPENGLES2=1 ..
+For OpenGL ES 3: cmake -DENABLE_OPENGLES3=1 ..
+
+The Raspberry Pi 4 will build the core just fine without these flags, but for the core to run it seems to require using GLES3.
 
 --------------------------------
 ### Requirements to run the core

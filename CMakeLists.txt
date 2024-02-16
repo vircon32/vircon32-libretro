@@ -22,8 +22,7 @@ set(CORE_BINARY_NAME "vircon32_libretro")
 # Check for OpenGL, the only dependency of this core
 # (EmuELEC build environment automatically does this)
 if(PLATFORM STREQUAL "EMUELEC")
-    message(STATUS "* OPENGL to be found bi EmuELEC")
-    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC EMUELEC=1)
+    message(STATUS "* OPENGL to be found by EmuELEC")
     
 # for Android we will automatically link against GLES3
 # and avoid trying to find OpenGL the normal way
@@ -86,6 +85,11 @@ add_library(${CORE_BINARY_NAME} SHARED
 
 # Our C++ sources need C++11 to compile
 set_property(TARGET ${CORE_BINARY_NAME} PROPERTY CXX_STANDARD 11)
+
+# On EmuELEC we need to define this flag
+if(PLATFORM STREQUAL "EMUELEC")
+    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC EMUELEC=1)
+endif()
 
 # The code needs this preprocessor variable
 if(ENABLE_OPENGLES2)

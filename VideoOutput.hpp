@@ -35,6 +35,7 @@ class VideoOutput
         // OpenGL IDs of loaded textures
         GLuint BiosTextureID;
         GLuint CartridgeTextureIDs[ V32::Constants::GPUMaximumCartridgeTextures ];
+        int32_t SelectedTexture;
         
         // white texture used to draw solid colors
         GLuint WhiteTextureID;

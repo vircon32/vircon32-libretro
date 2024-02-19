@@ -146,6 +146,8 @@ const string FragmentShaderCode =
 
 VideoOutput::VideoOutput()
 {
+    SelectedTexture = -1;
+    
     // all texture IDs are initially 0
     BiosTextureID = 0;
     
@@ -450,6 +452,7 @@ void VideoOutput::BeginFrame()
     UseShaderProgram();
     RenderToFramebuffer();
     glEnable( GL_BLEND );
+    SelectTexture( SelectedTexture );
     SetBlendingMode( BlendingMode );
     SetMultiplyColor( MultiplyColor );
     
@@ -634,8 +637,9 @@ void VideoOutput::ClearScreen( GPUColor ClearColor )
     // draw quad as "textured"
     DrawTexturedQuad( ScreenQuad );
     
-    // restore previous multiply color
+    // restore previous multiply color and texture
     SetMultiplyColor( PreviousMultiplyColor );
+    SelectTexture( SelectedTexture );
 }
 
 
@@ -710,6 +714,7 @@ void VideoOutput::UnloadTexture( int GPUTextureID )
 
 void VideoOutput::SelectTexture( int GPUTextureID )
 {
+    SelectedTexture = GPUTextureID;
     GLuint* OpenGLTextureID = &BiosTextureID;
     
     if( GPUTextureID >= 0 )

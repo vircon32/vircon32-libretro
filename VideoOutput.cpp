@@ -451,6 +451,40 @@ void VideoOutput::BeginFrame()
     RenderToFramebuffer();
     glEnable( GL_BLEND );
     SetBlendingMode( BlendingMode );
+    SetMultiplyColor( MultiplyColor );
+    
+    // tell the GPU which of its texture processors to use
+    glUniform1i( TextureUnitLocation, 0 );  // texture unit 0 is for decal textures
+    
+    // define storage and format for vertex positions
+    glBindBuffer( GL_ARRAY_BUFFER, VBOPositions );
+    
+    glVertexAttribPointer
+    (
+        PositionsLocation,  // location (0-based index) within the shader program
+        2,                  // 2 components per vertex (x,y)
+        GL_FLOAT,           // each component is of type GLfloat
+        GL_FALSE,           // do not normalize values (convert directly to fixed-point)
+        0,                  // no gap between values (adjacent in memory)
+        nullptr             // pointer to the array
+    );
+    
+    glEnableVertexAttribArray( PositionsLocation );
+    
+    // define storage and format for texture coordinates
+    glBindBuffer( GL_ARRAY_BUFFER, VBOTexCoords );
+    
+    glVertexAttribPointer
+    (
+        TexCoordsLocation,  // location (0-based index) within the shader program
+        2,                  // 2 components per vertex (u,v)
+        GL_FLOAT,           // each component is of type GLFloat
+        GL_FALSE,           // do not normalize values (convert directly to fixed-point)
+        0,                  // no gap between values (adjacent in memory)
+        nullptr             // pointer to the array
+    );
+    
+    glEnableVertexAttribArray( TexCoordsLocation );
 }
 
 
@@ -462,6 +496,16 @@ void VideoOutput::BeginFrame()
 void VideoOutput::SetMultiplyColor( GPUColor NewMultiplyColor )
 {
     MultiplyColor = NewMultiplyColor;
+    
+    // send our multiply color to the GPU
+    glUniform4f
+    (
+        MultiplyColorLocation,      // location (0-based index) within the shader program
+        MultiplyColor.R / 255.0,    // the 4 color components (RGBA) in range [0.0-1.0]
+        MultiplyColor.G / 255.0,
+        MultiplyColor.B / 255.0,
+        MultiplyColor.A / 255.0
+    );
 }
 
 // -----------------------------------------------------------------------------
@@ -519,27 +563,11 @@ void VideoOutput::DrawTexturedQuad( const GPUQuad& Quad )
     memcpy( QuadPositionCoords, Quad.VertexPositions, 8 * sizeof( float ) );
     memcpy( QuadTextureCoords, Quad.VertexTexCoords, 8 * sizeof( float ) );
     
-    // PART 1: Update uniforms (i.e. shader globals)
-    // - - - - - - - - - - - - - - - - - - - - - - - -
-    
-    // tell the GPU which of its texture processors to use
-    glUniform1i( TextureUnitLocation, 0 );  // texture unit 0 is for decal textures
-    
-    // send our multiply color to the GPU
-    glUniform4f
-    (
-        MultiplyColorLocation,      // location (0-based index) within the shader program
-        MultiplyColor.R / 255.0,    // the 4 color components (RGBA) in range [0.0-1.0]
-        MultiplyColor.G / 255.0,
-        MultiplyColor.B / 255.0,
-        MultiplyColor.A / 255.0
-    );
-    
-    // PART 2: Send attributes (i.e. shader input variables)
+    // PART 1: Send attributes (i.e. shader input variables)
     // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     
     glBindBuffer( GL_ARRAY_BUFFER, VBOPositions );
-
+    
     // send updated vertex positions to the GPU
     glBufferSubData
     (
@@ -548,19 +576,6 @@ void VideoOutput::DrawTexturedQuad( const GPUQuad& Quad )
         8 * sizeof( GLfloat ),
         QuadPositionCoords
     );
-    
-    // define storage and format for vertex positions
-    glVertexAttribPointer
-    (
-        PositionsLocation,  // location (0-based index) within the shader program
-        2,                  // 2 components per vertex (x,y)
-        GL_FLOAT,           // each component is of type GLfloat
-        GL_FALSE,           // do not normalize values (convert directly to fixed-point)
-        0,                  // no gap between values (adjacent in memory)
-        nullptr             // pointer to the array
-    );
-    
-    glEnableVertexAttribArray( PositionsLocation );
     
     // send updated vertex texture coordinates to the GPU
     glBindBuffer( GL_ARRAY_BUFFER, VBOTexCoords );
@@ -573,20 +588,7 @@ void VideoOutput::DrawTexturedQuad( const GPUQuad& Quad )
         QuadTextureCoords
     );
     
-    // define storage and format for texture coordinates
-    glVertexAttribPointer
-    (
-        TexCoordsLocation,  // location (0-based index) within the shader program
-        2,                  // 2 components per vertex (u,v)
-        GL_FLOAT,           // each component is of type GLFloat
-        GL_FALSE,           // do not normalize values (convert directly to fixed-point)
-        0,                  // no gap between values (adjacent in memory)
-        nullptr             // pointer to the array
-    );
-    
-    glEnableVertexAttribArray( TexCoordsLocation );
-    
-    // PART 3: Draw geometry
+    // PART 2: Draw geometry
     // - - - - - - - - - - - - -
     
     // draw the quad as 2 connected triangles
@@ -604,7 +606,7 @@ void VideoOutput::ClearScreen( GPUColor ClearColor )
 {
     // temporarily replace multiply color with clear color
     GPUColor PreviousMultiplyColor = MultiplyColor;
-    MultiplyColor = ClearColor;
+    SetMultiplyColor( ClearColor );
     
     // bind white texture
     glBindTexture( GL_TEXTURE_2D, WhiteTextureID );
@@ -633,7 +635,7 @@ void VideoOutput::ClearScreen( GPUColor ClearColor )
     DrawTexturedQuad( ScreenQuad );
     
     // restore previous multiply color
-    MultiplyColor = PreviousMultiplyColor;
+    SetMultiplyColor( PreviousMultiplyColor );
 }
 
 

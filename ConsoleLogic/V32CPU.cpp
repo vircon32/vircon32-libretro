@@ -155,9 +155,6 @@ namespace V32
     
     void V32CPU::RunNextCycle()
     {
-        // do nothing when stopped for some reason
-        if( Halted || Waiting ) return;
-        
         // fetch next instruction
         if( !MemoryBus->ReadAddress( InstructionPointer.AsInteger++, (V32Word&)Instruction ) )
           return;

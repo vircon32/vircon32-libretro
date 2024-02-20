@@ -212,6 +212,9 @@ void retro_run()
     Video.BeginFrame();
     Console.RunNextFrame();
     
+    // ensure that all queued quads are rendered
+    Video.RenderQuadQueue();
+    
     // send this frame's video signal to libretro
     video_cb( RETRO_HW_FRAME_BUFFER_VALID, V32::Constants::ScreenWidth, V32::Constants::ScreenHeight, 0 );
     

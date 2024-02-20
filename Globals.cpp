@@ -55,7 +55,7 @@ namespace CallbackFunctions
     
     void DrawQuad( V32::GPUQuad& DrawnQuad )
     {
-        Video.DrawTexturedQuad( DrawnQuad );
+        Video.AddQuadToQueue( DrawnQuad );
     }
     
     // -----------------------------------------------------------------------------

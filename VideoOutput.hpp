@@ -30,6 +30,7 @@ class VideoOutput
         // arrays to hold buffer info
         GLfloat QuadPositionCoords[ 8 * QUAD_QUEUE_SIZE ];
         GLfloat QuadTextureCoords[ 8 * QUAD_QUEUE_SIZE ];
+        GLushort VertexIndices[ 6 * QUAD_QUEUE_SIZE ];
         
         // current color modifiers
         V32::GPUColor MultiplyColor;

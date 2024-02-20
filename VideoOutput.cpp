@@ -154,6 +154,19 @@ VideoOutput::VideoOutput()
     
     for( int i = 0; i < Constants::GPUMaximumCartridgeTextures; i++ )
       CartridgeTextureIDs[ i ] = 0;
+    
+    // initialize vertex indices; they are organized
+    // assuming each quad will be given as 4 vertices,
+    // as in a GL_TRIANGLE_STRIP
+    for( int i = 0; i < QUAD_QUEUE_SIZE; i++ )
+    {
+        VertexIndices[ 6*i + 0 ] = 4*i + 0;
+        VertexIndices[ 6*i + 1 ] = 4*i + 1;
+        VertexIndices[ 6*i + 2 ] = 4*i + 2;
+        VertexIndices[ 6*i + 3 ] = 4*i + 1;
+        VertexIndices[ 6*i + 4 ] = 4*i + 2;
+        VertexIndices[ 6*i + 5 ] = 4*i + 3;
+    }
 }
 
 // -----------------------------------------------------------------------------
@@ -275,32 +288,6 @@ void VideoOutput::UseShaderProgram()
 
 // -----------------------------------------------------------------------------
 
-// indices are organized assuming each quad will
-// be given as 4 vertices, as in a GL_TRIANGLE_STRIP
-const GLuint VertexIndices[ 6 * QUAD_QUEUE_SIZE ] =
-{
-     0,  1,  2,  1,  2,  3,
-     4,  5,  6,  5,  6,  7,
-     8,  9, 10,  9, 10, 11,
-    12, 13, 14, 13, 14, 15,
-    16, 17, 18, 17, 18, 19,
-    20, 21, 22, 21, 22, 23,
-    24, 25, 26, 25, 26, 27,
-    28, 29, 30, 29, 30, 31,
-    32, 33, 34, 33, 34, 35,
-    36, 37, 38, 37, 38, 39,
-    40, 41, 42, 41, 42, 43,
-    44, 45, 46, 45, 46, 47,
-    48, 49, 50, 49, 50, 51,
-    52, 53, 54, 53, 54, 55,
-    56, 57, 58, 57, 58, 59,
-    60, 61, 62, 61, 62, 63,
-    64, 65, 66, 65, 66, 67,
-    68, 69, 70, 69, 70, 71,
-    72, 73, 74, 73, 74, 75,
-    76, 77, 78, 77, 78, 79
-};
-
 void VideoOutput::InitRendering()
 {
     LOG( "Initializing rendering" );
@@ -410,7 +397,7 @@ void VideoOutput::InitRendering()
     glBufferData
     (
         GL_ELEMENT_ARRAY_BUFFER,
-        QUAD_QUEUE_SIZE * 6 * sizeof( GLuint ),
+        QUAD_QUEUE_SIZE * 6 * sizeof( GLushort ),
         VertexIndices,
         GL_STATIC_DRAW
     );
@@ -533,12 +520,12 @@ void VideoOutput::BeginFrame()
     // (vertices are given as triangle strip pairs)
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, VBOIndices );
     
-    glBufferData
+    glBufferSubData
     (
         GL_ELEMENT_ARRAY_BUFFER,
-        QUAD_QUEUE_SIZE * 6 * sizeof( GLuint ),
-        VertexIndices,
-        GL_STATIC_DRAW
+        0,
+        QUAD_QUEUE_SIZE * 6 * sizeof( GLushort ),
+        VertexIndices
     );
 }
 
@@ -624,13 +611,34 @@ void VideoOutput::AddQuadToQueue( const GPUQuad& Quad )
 {
     // copy information from the received GPU quad
     const int SizePerQuad = 8 * sizeof( float );
-    memcpy( &QuadPositionCoords[ 8 * QueuedQuads ], Quad.VertexPositions, SizePerQuad );
-    memcpy( &QuadTextureCoords [ 8 * QueuedQuads ], Quad.VertexTexCoords, SizePerQuad );
+    
+    // send attributes (i.e. shader input variables)
+    glBindBuffer( GL_ARRAY_BUFFER, VBOPositions );
+    
+    // send updated vertex positions to the GPU
+    glBufferSubData
+    (
+        GL_ARRAY_BUFFER,
+        QueuedQuads * SizePerQuad,
+        SizePerQuad,
+        Quad.VertexPositions
+    );
+    
+    // send updated vertex texture coordinates to the GPU
+    glBindBuffer( GL_ARRAY_BUFFER, VBOTexCoords );
+    
+    glBufferSubData
+    (
+        GL_ARRAY_BUFFER,
+        QueuedQuads * SizePerQuad,
+        SizePerQuad,
+        Quad.VertexTexCoords
+    );
     
     // update the queue
     QueuedQuads++;
     
-    // draw the queue when exhausted
+    // force queue draw if it becomes full
     if( QueuedQuads >= QUAD_QUEUE_SIZE )
       RenderQuadQueue();
 }
@@ -640,42 +648,14 @@ void VideoOutput::AddQuadToQueue( const GPUQuad& Quad )
 void VideoOutput::RenderQuadQueue()
 {
     if( QueuedQuads == 0 ) return;
-    int QueuedQuadsSize = QueuedQuads * 8 * sizeof( float );
     
-    // PART 1: Send attributes (i.e. shader input variables)
-    // - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    
-    glBindBuffer( GL_ARRAY_BUFFER, VBOPositions );
-    
-    // send updated vertex positions to the GPU
-    glBufferSubData
-    (
-        GL_ARRAY_BUFFER,
-        0,
-        QueuedQuadsSize,
-        QuadPositionCoords
-    );
-    
-    // send updated vertex texture coordinates to the GPU
-    glBindBuffer( GL_ARRAY_BUFFER, VBOTexCoords );
-    
-    glBufferSubData
-    (
-        GL_ARRAY_BUFFER,
-        0,
-        QueuedQuadsSize,
-        QuadTextureCoords
-    );
-    
-    // PART 2: Draw geometry
-    // - - - - - - - - - - - - -
     // draw the quad as 2 triangles
     glDrawElements
     (
         GL_TRIANGLES,
-        QueuedQuads * 6,    // number of indices
-        GL_UNSIGNED_INT,    // format of indices
-        (void*)0            // element array buffer offset
+        QueuedQuads * 6,      // number of indices
+        GL_UNSIGNED_SHORT,    // format of indices
+        (void*)0              // element array buffer offset
     );
     
     // reset the queue

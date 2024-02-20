@@ -399,7 +399,7 @@ void VideoOutput::InitRendering()
         GL_ELEMENT_ARRAY_BUFFER,
         QUAD_QUEUE_SIZE * 6 * sizeof( GLushort ),
         VertexIndices,
-        GL_STATIC_DRAW
+        GL_STREAM_DRAW
     );
     
     LOG( "Finished initializing rendering" );
@@ -455,6 +455,20 @@ void VideoOutput::Destroy()
     for( int i = 0; i < Constants::GPUMaximumCartridgeTextures; i++ )
       if( CartridgeTextureIDs[ i ] != 0 )
         UnloadTexture( CartridgeTextureIDs[ i ] );
+    
+    // delete our buffers
+    glDeleteBuffers( 1, &VBOPositions );
+    glDeleteBuffers( 1, &VBOTexCoords );
+    glDeleteBuffers( 1, &VBOIndices );
+    
+    #if defined(EMUELEC)
+      glDeleteVertexArraysOES( 1, &VAO );
+    #else
+      glDeleteVertexArrays( 1, &VAO );
+    #endif
+    
+    // delete our shader program
+    glDeleteProgram( ShaderProgramID );
 }
 
 

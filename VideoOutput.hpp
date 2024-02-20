@@ -44,6 +44,7 @@ class VideoOutput
         GLuint VAO;
         GLuint VBOPositions;
         GLuint VBOTexCoords;
+        GLuint VBOIndices;
         GLuint ShaderProgramID;
         
         // positions of shader parameters

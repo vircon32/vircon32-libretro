@@ -28,8 +28,7 @@ class VideoOutput
     private:
         
         // arrays to hold buffer info
-        GLfloat QuadPositionCoords[ 8 * QUAD_QUEUE_SIZE ];
-        GLfloat QuadTextureCoords[ 8 * QUAD_QUEUE_SIZE ];
+        GLfloat QuadVerticesInfo[ 16 * QUAD_QUEUE_SIZE ];
         GLushort VertexIndices[ 6 * QUAD_QUEUE_SIZE ];
         
         // current color modifiers
@@ -46,8 +45,7 @@ class VideoOutput
         
         // additional GL objects
         GLuint VAO;
-        GLuint VBOPositions;
-        GLuint VBOTexCoords;
+        GLuint VBOVertexInfo;
         GLuint VBOIndices;
         GLuint ShaderProgramID;
         
@@ -55,8 +53,7 @@ class VideoOutput
         int QueuedQuads;
         
         // positions of shader parameters
-        GLuint PositionsLocation;
-        GLuint TexCoordsLocation;
+        GLuint VertexInfoLocation;
         GLuint TextureUnitLocation;
         GLuint MultiplyColorLocation;
         

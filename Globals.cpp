@@ -60,23 +60,37 @@ namespace CallbackFunctions
     
     // -----------------------------------------------------------------------------
     
-    void SetMultiplyColor( V32::GPUColor MultiplyColor )
+    void SetMultiplyColor( V32::GPUColor NewMultiplyColor )
     {
-        Video.SetMultiplyColor( MultiplyColor );
+        // GPU colors are not directly comparable so use words
+        V32::V32Word New, Old;
+        New.AsColor = NewMultiplyColor;
+        Old.AsColor = Video.GetMultiplyColor();
+        
+        // set multiply color only when needed, so that
+        // quad groups are not broken without need
+        if( New.AsInteger != Old.AsInteger )
+          Video.SetMultiplyColor( NewMultiplyColor );
     }
     
     // -----------------------------------------------------------------------------
     
     void SetBlendingMode( int NewBlendingMode )
     {
-        Video.SetBlendingMode( (V32::IOPortValues)NewBlendingMode );
+        // set blending mode only when needed, so that
+        // quad groups are not broken without need
+        if( NewBlendingMode != (int)Video.GetBlendingMode() )
+          Video.SetBlendingMode( (V32::IOPortValues)NewBlendingMode );
     }
     
     // -----------------------------------------------------------------------------
     
     void SelectTexture( int GPUTextureID )
     {
-        Video.SelectTexture( GPUTextureID );
+        // select texture only when needed, so that
+        // quad groups are not broken without need
+        if( GPUTextureID != Video.GetSelectedTexture() )
+          Video.SelectTexture( GPUTextureID );
     }
     
     // -----------------------------------------------------------------------------

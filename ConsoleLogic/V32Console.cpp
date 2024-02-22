@@ -151,14 +151,14 @@ namespace V32
         // STEP 2: Run a frame's worth of cycles
         for( int i = 0; i < Constants::CyclesPerFrame; i++ )
         {
+            // end loop early when CPU is set to wait
+            if( CPU.Waiting || CPU.Halted )
+              break;
+            
             // only these components need to
             // be notified of each CPU cycle
             Timer.RunNextCycle();
             CPU.RunNextCycle();
-            
-            // end loop early when CPU is set to wait
-            if( CPU.Waiting || CPU.Halted )
-              break;
         }
         
         // after runnning the frame, update load info

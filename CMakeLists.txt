@@ -11,10 +11,7 @@ if(NOT CMAKE_BUILD_TYPE)
 endif()
 
 # Declare the project
-project("vircon32-libretro" LANGUAGES C CXX)
-
-# Set name for final executable
-set(CORE_BINARY_NAME "vircon32_libretro")
+project("vircon32" LANGUAGES C CXX)
 
 # -----------------------------------------------------
 #   FINDING PROJECT DEPENDENCIES
@@ -74,8 +71,8 @@ add_subdirectory(ConsoleLogic)
 # -----------------------------------------------------
 #   DECLARE TARGET BINARIES
 
-# Define final library for the core with its sources
-add_library(${CORE_BINARY_NAME} SHARED
+# Set of source files to compile
+set(SOURCE_FILES
     Globals.cpp
     libretro.cpp
     Logging.cpp
@@ -83,36 +80,52 @@ add_library(${CORE_BINARY_NAME} SHARED
     ${CONSOLE_LOGIC_SRC}
     ${GLSYM_SRC})
 
+# Define final library for the core with its sources
+if(${LIBRETRO_STATIC})
+    add_library(vircon32_libretro STATIC ${SOURCE_FILES})
+else()
+    add_library(vircon32_libretro SHARED ${SOURCE_FILES})
+endif()
+
 # Our C++ sources need C++11 to compile
-set_property(TARGET ${CORE_BINARY_NAME} PROPERTY CXX_STANDARD 11)
+set_property(TARGET vircon32_libretro PROPERTY CXX_STANDARD 11)
 
 # On EmuELEC we need to define this flag
 if(PLATFORM STREQUAL "EMUELEC")
-    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC EMUELEC=1)
+    target_compile_definitions(vircon32_libretro PUBLIC EMUELEC=1)
 endif()
 
 # The code needs this preprocessor variable
 if(ENABLE_OPENGLES2)
-    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC HAVE_OPENGLES2=1)
+    target_compile_definitions(vircon32_libretro PUBLIC HAVE_OPENGLES2=1)
 elseif(ENABLE_OPENGLES3)
-    target_compile_definitions(${CORE_BINARY_NAME} PUBLIC HAVE_OPENGLES3=1)
+    target_compile_definitions(vircon32_libretro PUBLIC HAVE_OPENGLES3=1)
 endif()
 
 # Libraries to link to the core
-target_link_libraries(${CORE_BINARY_NAME}
+target_link_libraries(vircon32_libretro
     V32ConsoleLogic
     ${OPENGL_LIBRARIES})
 if(IOS)
-    target_link_options(${CORE_BINARY_NAME} PRIVATE -framework OpenGLES)
+    target_link_options(vircon32_libretro PRIVATE -framework OpenGLES)
 endif()
 
 # For gcc/MinGW we need to have the C/C++ std libs as part of the final library, not valid for aarch64 emuelec core build
 if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT PLATFORM STREQUAL "EMUELEC")
-    target_link_options(${CORE_BINARY_NAME} PRIVATE -static-libgcc -static-libstdc++)
+    target_link_options(vircon32_libretro PRIVATE -static-libgcc -static-libstdc++)
 endif()
 
 # Disable any unwanted prefix for the final library
-set_target_properties(${CORE_BINARY_NAME} PROPERTIES PREFIX "")
+set_target_properties(vircon32_libretro PROPERTIES PREFIX "")
+
+# The expected suffix may vary for different target platforms
+if(ANDROID_ABI)
+    set_target_properties(vircon32_libretro PROPERTIES SUFFIX "_android.so")
+elseif(EMSCRIPTEN)
+    set_target_properties(arduous_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.bc")
+elseif(LIBRETRO_STATIC)
+    set_target_properties(arduous_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.a")
+endif()
 
 # -----------------------------------------------------
 #   DEFINE INSTALL PROCESS
@@ -134,9 +147,9 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Linux")
     set(INSTALL_DIR "/home/$ENV{USER}/.config/retroarch/cores")
 elseif(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
-    set(INSTALL_DIR "/Users/$ENV{USER}/Library/Application\ Support/RetroArch/cores")
+    set(INSTALL_DIR "/Users/$ENV{USER}/Library/Application/ Support/RetroArch/cores")
 endif()
 
 # Install the shared library to the specified directory
-install(TARGETS ${CORE_BINARY_NAME}
+install(TARGETS vircon32_libretro
     DESTINATION ${INSTALL_DIR})

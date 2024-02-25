@@ -314,7 +314,7 @@ void VideoOutput::InitRendering()
     
     // on a core OpenGL profile, we need this since
     // the default VAO is not valid!
-    #if defined(EMUELEC)
+    #if defined(EMUELEC) || defined(HAVE_OPENGLES2)
       glGenVertexArraysOES( 1, &VAO );
       glBindVertexArrayOES( VAO );
     #else
@@ -433,7 +433,7 @@ void VideoOutput::Destroy()
     glDeleteBuffers( 1, &VBOVertexInfo );
     glDeleteBuffers( 1, &VBOIndices );
     
-    #if defined(EMUELEC)
+    #if defined(EMUELEC) || defined(HAVE_OPENGLES2)
       glDeleteVertexArraysOES( 1, &VAO );
     #else
       glDeleteVertexArrays( 1, &VAO );

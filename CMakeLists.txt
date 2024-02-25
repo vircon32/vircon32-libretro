@@ -21,13 +21,22 @@ project("vircon32" LANGUAGES C CXX)
 if(PLATFORM STREQUAL "EMUELEC")
     message(STATUS "* OPENGL to be found by EmuELEC")
     
-# for Android we will automatically link against GLES3
-# and avoid trying to find OpenGL the normal way
+# for Android avoid trying to find OpenGL the normal way
 elseif(ANDROID_ABI)
-    message(STATUS "* OPENGL ES 3 will be provided by Android")
-    set(ENABLE_OPENGLES3 1)
-    set(OPENGL_LIBRARIES GLESv3)
-    
+
+    # for 32-bit Android we will automatically link against GLES2
+    if(${ANDROID_ABI} STREQUAL "armeabi-v7a" OR ${ANDROID_ABI} STREQUAL "x86")
+        message(STATUS "* OPENGL ES 2 will be provided by Android")
+        set(ENABLE_OPENGLES2 1)
+        set(OPENGL_LIBRARIES GLESv2)
+        
+    # same for for 64-bit Android but with GLES3
+    else()
+        message(STATUS "* OPENGL ES 3 will be provided by Android")
+        set(ENABLE_OPENGLES3 1)
+        set(OPENGL_LIBRARIES GLESv3)
+    endif()
+
 # for IOS we will also link against GLES3, but in a different way
 elseif(IOS)
     set(ENABLE_OPENGLES3 1)
@@ -122,9 +131,9 @@ set_target_properties(vircon32_libretro PROPERTIES PREFIX "")
 if(ANDROID_ABI)
     set_target_properties(vircon32_libretro PROPERTIES SUFFIX "_android.so")
 elseif(EMSCRIPTEN)
-    set_target_properties(arduous_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.bc")
+    set_target_properties(vircon32_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.bc")
 elseif(LIBRETRO_STATIC)
-    set_target_properties(arduous_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.a")
+    set_target_properties(vircon32_libretro PROPERTIES SUFFIX "${LIBRETRO_SUFFIX}.a")
 endif()
 
 # -----------------------------------------------------

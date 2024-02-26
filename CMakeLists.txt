@@ -74,13 +74,34 @@ else()
     set(GLSYM_SRC glsym/rglgen.c glsym/glsym_gl.c)
 endif()
 
-# Define the Vircon32 logic library, in the subfolder
-add_subdirectory(ConsoleLogic)
-
 # -----------------------------------------------------
-#   DECLARE TARGET BINARIES
+#   DECLARE PROJECT SOURCES
 
-# Set of source files to compile
+# This folder used to be build independently into a
+# separate library called V32ConsoleLogic, but for
+# easier compilation in static builds we avoid that
+set(CONSOLE_LOGIC_DIR "ConsoleLogic")
+
+set(CONSOLE_LOGIC_SRC
+    ${CONSOLE_LOGIC_DIR}/AuxiliaryFunctions.cpp
+    ${CONSOLE_LOGIC_DIR}/ExternalInterfaces.cpp
+    ${CONSOLE_LOGIC_DIR}/V32Buses.cpp
+    ${CONSOLE_LOGIC_DIR}/V32CartridgeController.cpp
+    ${CONSOLE_LOGIC_DIR}/V32Console.cpp
+    ${CONSOLE_LOGIC_DIR}/V32CPU.cpp
+    ${CONSOLE_LOGIC_DIR}/V32CPUProcessors.cpp
+    ${CONSOLE_LOGIC_DIR}/V32GamepadController.cpp
+    ${CONSOLE_LOGIC_DIR}/V32GPU.cpp
+    ${CONSOLE_LOGIC_DIR}/V32GPUWriters.cpp
+    ${CONSOLE_LOGIC_DIR}/V32Memory.cpp
+    ${CONSOLE_LOGIC_DIR}/V32MemoryCardController.cpp
+    ${CONSOLE_LOGIC_DIR}/V32NullController.cpp
+    ${CONSOLE_LOGIC_DIR}/V32RNG.cpp
+    ${CONSOLE_LOGIC_DIR}/V32SPU.cpp
+    ${CONSOLE_LOGIC_DIR}/V32SPUWriters.cpp
+    ${CONSOLE_LOGIC_DIR}/V32Timer.cpp)
+
+# Total set of source files to compile
 set(SOURCE_FILES
     Globals.cpp
     libretro.cpp
@@ -88,6 +109,9 @@ set(SOURCE_FILES
     VideoOutput.cpp
     ${CONSOLE_LOGIC_SRC}
     ${GLSYM_SRC})
+
+# -----------------------------------------------------
+#   DECLARE TARGET BINARIES
 
 # Define final library for the core with its sources
 if(${LIBRETRO_STATIC})
@@ -112,9 +136,8 @@ elseif(ENABLE_OPENGLES3)
 endif()
 
 # Libraries to link to the core
-target_link_libraries(vircon32_libretro
-    V32ConsoleLogic
-    ${OPENGL_LIBRARIES})
+target_link_libraries(vircon32_libretro ${OPENGL_LIBRARIES})
+
 if(IOS)
     target_link_options(vircon32_libretro PRIVATE -framework OpenGLES)
 endif()

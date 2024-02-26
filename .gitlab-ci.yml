@@ -27,10 +27,6 @@ include:
   - project: 'libretro-infrastructure/ci-templates'
     file: '/windows-cmake-mingw.yml'
 
-  # DJGPP
-  - project: 'libretro-infrastructure/ci-templates'
-    file: '/djgpp-static-cmake.yml'
-
   # MacOS
   - project: 'libretro-infrastructure/ci-templates'
     file: 'osx-cmake-x86.yml'
@@ -190,11 +186,3 @@ libretro-build-tvos-arm64:
 
 # PS2, PSVita, GameCube, Wii and WiiU: Omitted
 # (they don't seem to support standard OpenGL)
-
-################################### MISC #####################################
-
-# Emscripten
-libretro-build-emscripten:
-  extends:
-    - .libretro-emscripten-static-cmake-retroarch-master
-    - .core-defs-gles2

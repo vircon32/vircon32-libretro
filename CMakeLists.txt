@@ -54,6 +54,11 @@ else()
     endif()
 endif()
 
+# for the Switch we will need to define this flag for gl treatment
+if(NSWITCH)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_LIBNX=1")
+endif()
+
 # -----------------------------------------------------
 #   DEFINE PROJECT STRUCTURE
 

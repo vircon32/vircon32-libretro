@@ -226,28 +226,41 @@ namespace V32
     // =============================================================================
     
     
-    void V32Console::LoadBios( const std::string& FilePath )
+    void V32Console::LoadBiosFile( const std::string& FilePath )
     {
-        Callbacks::LogLine( "Loading bios" );
+        Callbacks::LogLine( "Loading bios file" );
         Callbacks::LogLine( "File path: \"" + FilePath + "\"" );
         
-        // unload any previous bios
-        UnloadBios();
-        
         // open bios file
-        ifstream InputFile;
+        ifstream FileInput;
         
         // on windows convert path from UTF-8 to UTF-16
         #if defined(__WIN32__)
           wstring_convert< std::codecvt_utf8_utf16< wchar_t > > converter;
           wstring FilePathUTF16 = converter.from_bytes(FilePath);
-          InputFile.open( FilePathUTF16.c_str(), ios_base::binary | ios_base::ate );
+          FileInput.open( FilePathUTF16.c_str(), ios_base::binary | ios_base::ate );
         #else
-          InputFile.open( FilePath, ios_base::binary | ios_base::ate );
+          FileInput.open( FilePath, ios_base::binary | ios_base::ate );
         #endif
         
-        if( InputFile.fail() )
+        if( FileInput.fail() )
           Callbacks::ThrowException( "Cannot open BIOS file" );
+        
+        // now load the bios from the stream
+        LoadBiosData( FileInput );
+        
+        // close the file
+        FileInput.close();
+    }
+    
+    // -----------------------------------------------------------------------------
+    
+    void V32Console::LoadBiosData( std::istream& Input )
+    {
+        Callbacks::LogLine( "Loading bios data" );
+        
+        // unload any previous bios
+        UnloadBios();
         
         // - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
         // STEP 1: Load global information
@@ -255,7 +268,8 @@ namespace V32
         
         // get size and ensure it is a multiple of 4
         // (otherwise file contents are wrong)
-        unsigned FileBytes = InputFile.tellg();
+        Input.seekg( 0, ios_base::end );
+        unsigned FileBytes = Input.tellg();
         
         if( (FileBytes % 4) != 0 )
           Callbacks::ThrowException( "Incorrect V32 file format (file size must be a multiple of 4)" );
@@ -265,9 +279,9 @@ namespace V32
           Callbacks::ThrowException( "Incorrect V32 file format (file is too small)" );
         
         // now we can safely read the global header
-        InputFile.seekg( 0, ios_base::beg );
+        Input.seekg( 0, ios_base::beg );
         ROMFileFormat::Header ROMHeader;
-        InputFile.read( (char*)(&ROMHeader), sizeof(ROMFileFormat::Header) );
+        Input.read( (char*)(&ROMHeader), sizeof(ROMFileFormat::Header) );
         
         // check if the ROM is actually a cartridge
         if( CheckSignature( ROMHeader.Signature, ROMFileFormat::CartridgeSignature ) )
@@ -326,7 +340,7 @@ namespace V32
         
         // load a binary file header
         BinaryFileFormat::Header BinaryHeader;
-        InputFile.read( (char*)(&BinaryHeader), sizeof(BinaryFileFormat::Header) );
+        Input.read( (char*)(&BinaryHeader), sizeof(BinaryFileFormat::Header) );
         
         // check signature for embedded binary
         if( !CheckSignature( BinaryHeader.Signature, BinaryFileFormat::Signature ) )
@@ -339,7 +353,7 @@ namespace V32
         // load the binary contents
         vector< V32Word > LoadedBinary;
         LoadedBinary.resize( BinaryHeader.NumberOfWords );
-        InputFile.read( (char*)(&LoadedBinary[ 0 ]), BinaryHeader.NumberOfWords * 4 );
+        Input.read( (char*)(&LoadedBinary[ 0 ]), BinaryHeader.NumberOfWords * 4 );
         BiosProgramROM.Connect( &LoadedBinary[ 0 ], BinaryHeader.NumberOfWords );
         
         // discard the temporary buffer
@@ -351,7 +365,7 @@ namespace V32
         
         // load a texture file signature
         TextureFileFormat::Header TextureHeader;
-        InputFile.read( (char*)(&TextureHeader), sizeof(TextureFileFormat::Header) );
+        Input.read( (char*)(&TextureHeader), sizeof(TextureFileFormat::Header) );
         
         // check signature for embedded texture
         if( !CheckSignature( TextureHeader.Signature, TextureFileFormat::Signature ) )
@@ -372,7 +386,7 @@ namespace V32
         // load the texture pixels line by line,
         // in order to expand it to full size
         for( unsigned y = 0; y < TextureHeader.TextureHeight; y++ )
-          InputFile.read( (char*)(LoadedTexture[ y ]), TextureHeader.TextureWidth * 4 );
+          Input.read( (char*)(LoadedTexture[ y ]), TextureHeader.TextureWidth * 4 );
         
         // send bios texture to the video library
         Callbacks::LoadTexture( -1, LoadedTexture );
@@ -383,7 +397,7 @@ namespace V32
         
         // load a sound file signature
         SoundFileFormat::Header SoundHeader;
-        InputFile.read( (char*)(&SoundHeader), sizeof(SoundFileFormat::Header) );
+        Input.read( (char*)(&SoundHeader), sizeof(SoundFileFormat::Header) );
         
         // check signature for embedded sound
         if( !CheckSignature( SoundHeader.Signature, SoundFileFormat::Signature ) )
@@ -399,14 +413,13 @@ namespace V32
         // load the sound samples
         vector< SPUSample > LoadedSound;
         LoadedSound.resize( SoundHeader.SoundSamples );
-        InputFile.read( (char*)(&LoadedSound[ 0 ]), SoundHeader.SoundSamples * 4 );
+        Input.read( (char*)(&LoadedSound[ 0 ]), SoundHeader.SoundSamples * 4 );
         SPU.LoadSound( SPU.BiosSound, &LoadedSound[ 0 ], SoundHeader.SoundSamples );
         
         // discard the temporary buffer
         LoadedSound.clear();
         
-        // close the file
-        InputFile.close();
+        // report success
         Callbacks::LogLine( "Finished loading BIOS" );
     }
     

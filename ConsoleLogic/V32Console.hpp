@@ -80,7 +80,8 @@ namespace V32
             
             // bios management
             // (bios cannot be unloaded, but some implementations may need it)
-            void LoadBios( const std::string& FilePath );
+            void LoadBiosFile( const std::string& FilePath );
+            void LoadBiosData( std::istream& Input );
             void UnloadBios();
             bool HasBios();
             

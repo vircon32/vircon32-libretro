@@ -14,6 +14,19 @@ endif()
 project("vircon32" LANGUAGES C CXX)
 
 # -----------------------------------------------------
+#   EMBED BINARY ASSETS IN THE CORE
+
+# Load the embed script
+include("embed-binaries/embed-binaries.cmake")
+
+# Embed the standard bios file into an array
+# (this will need to be linked to the core later)
+embed_binaries(EmbeddedAssets
+    ASSET
+        NAME "StandardBios"
+        PATH "Assets/StandardBios.v32")
+
+# -----------------------------------------------------
 #   FINDING PROJECT DEPENDENCIES
 
 # Check for OpenGL, the only dependency of this core
@@ -141,7 +154,9 @@ elseif(ENABLE_OPENGLES3)
 endif()
 
 # Libraries to link to the core
-target_link_libraries(vircon32_libretro ${OPENGL_LIBRARIES})
+target_link_libraries(vircon32_libretro
+    ${OPENGL_LIBRARIES}
+    EmbeddedAssets)
 
 if(IOS)
     target_link_options(vircon32_libretro PRIVATE -framework OpenGLES)

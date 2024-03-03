@@ -145,11 +145,13 @@ const string FragmentShaderCode =
 
 VideoOutput::VideoOutput()
 {
+    // default values
     SelectedTexture = -1;
     QueuedQuads = 0;
     
     // all texture IDs are initially 0
     BiosTextureID = 0;
+    WhiteTextureID = 0;
     
     for( int i = 0; i < Constants::GPUMaximumCartridgeTextures; i++ )
       CartridgeTextureIDs[ i ] = 0;
@@ -291,10 +293,6 @@ void VideoOutput::InitRendering()
 {
     LOG( "Initializing rendering" );
     
-    // initialize blending
-    glEnable( GL_BLEND );
-    SetBlendingMode( IOPortValues::GPUBlendingMode_Alpha );
-    
     // compile our shader program
     LOG( "Compiling GLSL shader program" );
     ClearOpenGLErrors();
@@ -335,6 +333,10 @@ void VideoOutput::InitRendering()
     
     // initialize our multiply color to neutral
     SetMultiplyColor( GPUColor{ 255, 255, 255, 255 } );
+    
+    // initialize blending
+    glEnable( GL_BLEND );
+    SetBlendingMode( IOPortValues::GPUBlendingMode_Alpha );
     
     // create a white texture to draw solid color
     CreateWhiteTexture();

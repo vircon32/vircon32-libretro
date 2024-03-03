@@ -15,6 +15,9 @@
 // *****************************************************************************
 
 
+// we will render our quads in groups using a
+// fixed size queue; this parameter sets the
+// queue size and acts as group size limit
 #define QUAD_QUEUE_SIZE 20
 
 

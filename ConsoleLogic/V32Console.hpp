@@ -70,7 +70,7 @@ namespace V32
             // control signals
             void SetPower( bool On );
             void Reset();
-            void RunNextFrame();
+            void RunNextFrame( bool FrameSkipped );
             
             // general status queries
             bool IsPowerOn();

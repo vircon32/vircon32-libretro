@@ -134,11 +134,23 @@ namespace V32
     
     // -----------------------------------------------------------------------------
     
-    void V32Console::RunNextFrame()
+    // if a device can't run at 60 fps, some frames may be
+    // skipped to prevent audio crackling; however, know
+    // that this may cause video stutter and other issues:
+    // input reading will be less reliable and in some
+    // games audio desynchronization might cause problems
+    void V32Console::RunNextFrame( bool FrameSkipped )
     {
         // do nothing when not applicable
         if( !PowerIsOn )
           return;
+        
+        // for a skipped frame we will only generate audio
+        if( FrameSkipped )
+        {
+            SPU.UpdateOutputBuffer();
+            return;
+        }
         
         // STEP 1: Begin a new frame by sending
         // a frame change message to components

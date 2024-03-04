@@ -118,6 +118,89 @@ const struct retro_controller_info controller_ports[] =
 
 
 // =============================================================================
+//      HANDLING FRAMESKIPPING
+// =============================================================================
+
+
+// internal configuration variable
+bool enable_frameskip = false;
+
+// we will store audio buffer status and use
+// it to decide when we should skip a frame
+bool audio_buffer_active = false;
+bool audio_buffer_underrun_likely = false;
+unsigned audio_buffer_occupancy = 0;
+
+// -----------------------------------------------------------------------------
+
+// callback to receive audio buffer status
+static void retro_audio_buff_status_cb( bool active, unsigned occupancy, bool underrun_likely )
+{
+    audio_buffer_active = active;
+    audio_buffer_occupancy = occupancy;
+    audio_buffer_underrun_likely = underrun_likely;
+}
+
+// -----------------------------------------------------------------------------
+
+// frameskip will need to be configured both initially
+// and whenever its value is changed in the front-end
+void configure_frameskip()
+{
+    struct retro_audio_buffer_status_callback buf_status_cb;
+    buf_status_cb.callback = retro_audio_buff_status_cb;
+    
+    // with frameskip enabled, tell front-end we want to receive audio buffer status
+    if( enable_frameskip )
+    {
+        // careful: automatic frameskipping needs audio buffer info;
+        // however, some front-ends might not support this
+        if( !environ_cb( RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, &buf_status_cb ))
+        {
+            LOG( "Automatic frame skip has been disabled because frontend does not support audio buffer status monitoring." );
+            audio_buffer_underrun_likely = false;
+            return;
+        }
+    }
+    
+    // otherwise no need for that
+    else environ_cb( RETRO_ENVIRONMENT_SET_AUDIO_BUFFER_STATUS_CALLBACK, nullptr );
+}
+
+
+// =============================================================================
+//      HANDLING CORE-SPECIFIC OPTIONS
+// =============================================================================
+
+
+// configuration variables for this core
+struct retro_variable config_variables[] =
+{
+    { "enable_frameskip", "Automatic frame skip; Disabled|Enabled" },
+    { nullptr, nullptr }
+};
+
+// -----------------------------------------------------------------------------
+
+static void update_config_variables()
+{
+    // use this to ask frontend for a variable value
+    struct retro_variable variable_state =
+    {
+        "enable_frameskip", nullptr
+    };
+    
+    if( environ_cb( RETRO_ENVIRONMENT_GET_VARIABLE, &variable_state ) && variable_state.value )
+    {
+        enable_frameskip = !strcmp( variable_state.value, "Enabled" );
+        LOG( string("Automatic frame skip ") + (enable_frameskip? "enabled" : "disabled" ) );
+        
+        configure_frameskip();
+    }
+}
+
+
+// =============================================================================
 //      SETTING UP THE CORE ENVIRONMENT
 // =============================================================================
 
@@ -172,6 +255,9 @@ void retro_set_environment( retro_environment_t cb )
     environ_cb( RETRO_ENVIRONMENT_SET_INPUT_DESCRIPTORS, (void*)controller_descriptor );
     environ_cb( RETRO_ENVIRONMENT_SET_CONTROLLER_INFO, (void*)controller_ports );
     
+    // define this core's configuration variables
+    environ_cb( RETRO_ENVIRONMENT_SET_VARIABLES, &config_variables );
+    
     // fill callback function for logging
     struct retro_log_callback logging;
     
@@ -187,44 +273,69 @@ void retro_set_environment( retro_environment_t cb )
 
 void retro_run()
 {
-    input_poll_cb();
+    // if config variables have changed, update them
+    bool variables_changed = false;
     
-    // read input for all connected gamepads
-    for( int Port = 0; Port < V32::Constants::GamepadPorts; Port++ )
+    if( environ_cb( RETRO_ENVIRONMENT_GET_VARIABLE_UPDATE, &variables_changed ) && variables_changed )
+      update_config_variables();
+    
+    // determine if this frame will be skipped
+    bool skip_frame = enable_frameskip && audio_buffer_active && audio_buffer_underrun_likely;
+    
+    // when possible, run a full frame
+    if( !skip_frame )
     {
-        if( !Console.HasGamepad( Port ) )
-          continue;
+        // read input for all connected gamepads
+        input_poll_cb();
         
-        // read all controls
-        Console.SetGamepadControl( Port, V32::GamepadControls::Left,        input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT  ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::Right,       input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::Up,          input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP    ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::Down,        input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN  ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonStart, input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonA,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A     ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonB,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B     ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonX,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X     ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonY,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y     ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonL,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L     ) );
-        Console.SetGamepadControl( Port, V32::GamepadControls::ButtonR,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R     ) );
+        for( int Port = 0; Port < V32::Constants::GamepadPorts; Port++ )
+        {
+            if( !Console.HasGamepad( Port ) )
+              continue;
+            
+            // read all controls
+            Console.SetGamepadControl( Port, V32::GamepadControls::Left,        input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_LEFT  ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::Right,       input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::Up,          input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP    ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::Down,        input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_DOWN  ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonStart, input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonA,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_A     ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonB,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B     ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonX,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_X     ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonY,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_Y     ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonL,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L     ) );
+            Console.SetGamepadControl( Port, V32::GamepadControls::ButtonR,     input_state_cb( Port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_R     ) );
+        }
+        
+        // run the console
+        if( !Console.IsPowerOn() )
+          Console.SetPower( true );
+        
+        Video.BeginFrame();
+        Console.RunNextFrame( false );
+        
+        // ensure that all queued quads are rendered
+        Video.RenderQuadQueue();
+        
+        // send this frame's video signal to libretro
+        video_cb( RETRO_HW_FRAME_BUFFER_VALID, V32::Constants::ScreenWidth, V32::Constants::ScreenHeight, 0 );        
+        
+        // send this frame's audio signal to libretro
+        Console.GetFrameSoundOutput( AudioBuffer );
+        audio_batch_cb( (const int16_t*)AudioBuffer.Samples, V32::Constants::SPUSamplesPerFrame );
     }
     
-    // run the console
-    if( !Console.IsPowerOn() )
-      Console.SetPower( true );
-    
-    Video.BeginFrame();
-    Console.RunNextFrame();
-    
-    // ensure that all queued quads are rendered
-    Video.RenderQuadQueue();
-    
-    // send this frame's video signal to libretro
-    video_cb( RETRO_HW_FRAME_BUFFER_VALID, V32::Constants::ScreenWidth, V32::Constants::ScreenHeight, 0 );
-    
-    // send this frame's audio signal to libretro
-    Console.GetFrameSoundOutput( AudioBuffer );
-    audio_batch_cb( (const int16_t*)AudioBuffer.Samples, V32::Constants::SPUSamplesPerFrame );
+    // when a frame is skipped, only generate audio
+    // to avoid a buffer underrun and prevent crackling
+    else
+    {
+        // generate 1 frame's worth of audio
+        Console.RunNextFrame( false );
+        
+        // send this frame's audio signal to libretro
+        Console.GetFrameSoundOutput( AudioBuffer );
+        audio_batch_cb( (const int16_t*)AudioBuffer.Samples, V32::Constants::SPUSamplesPerFrame );
+    }
 }
 
 
@@ -514,6 +625,9 @@ void retro_reset()
 
 bool retro_load_game( const struct retro_game_info *info )
 {
+    // before loading ensure that config variables are updated
+    update_config_variables();
+    
     // for OpenGL we will normally want 32bpp color format
     enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
     

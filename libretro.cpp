@@ -625,6 +625,8 @@ void retro_reset()
 
 bool retro_load_game( const struct retro_game_info *info )
 {
+    LOG( "Received signal: Load game" );
+    
     // before loading ensure that config variables are updated
     update_config_variables();
     
@@ -669,6 +671,8 @@ bool retro_load_game( const struct retro_game_info *info )
 
 void retro_unload_game()
 {
+    LOG( "Received signal: Unload game" );
+    
     Console.UnloadCartridge();
     Console.UnloadMemoryCard();
 }

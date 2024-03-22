@@ -185,6 +185,8 @@ VideoOutput::~VideoOutput()
 
 bool VideoOutput::CompileShaderProgram()
 {
+    LOG( "Compiling shader program" );
+    
     GLuint VertexShaderID = 0;
     GLuint FragmentShaderID = 0;
     int Success;
@@ -293,6 +295,13 @@ void VideoOutput::InitRendering()
 {
     LOG( "Initializing rendering" );
     
+    // log basic information for the received OpenGL context
+    LOG( "OpenGL context info:" );
+    LOG( string("Version: ") + (char*)glGetString( GL_VERSION ) );
+    LOG( string("Vendor: ") + (char*)glGetString( GL_VENDOR ) );
+    LOG( string("Renderer: ") + (char*)glGetString( GL_RENDERER ) );
+    LOG( string("GLSL version: ") + (char*)glGetString( GL_SHADING_LANGUAGE_VERSION ) );
+    
     // compile our shader program
     LOG( "Compiling GLSL shader program" );
     ClearOpenGLErrors();
@@ -304,11 +313,14 @@ void VideoOutput::InitRendering()
     glUseProgram( ShaderProgramID );
     
     // find the position for all our input variables within the shader program
+    LOG( "Finding variables in shader program" );
     VertexInfoLocation = glGetAttribLocation( ShaderProgramID, "VertexInfo" );
     
     // find the position for all our input uniforms within the shader program
     TextureUnitLocation = glGetUniformLocation( ShaderProgramID, "TextureUnit" );
     MultiplyColorLocation = glGetUniformLocation( ShaderProgramID, "MultiplyColor" );
+    
+    LOG( "Creating vertex arrays and buffers" );
     
     // on a core OpenGL profile, we need this since
     // the default VAO is not valid!
@@ -342,6 +354,7 @@ void VideoOutput::InitRendering()
     CreateWhiteTexture();
     
     // allocate memory for vertex info in the GPU
+    LOG( "Initializing vertex info buffer" );
     glBindBuffer( GL_ARRAY_BUFFER, VBOVertexInfo );
     
     glBufferData
@@ -367,6 +380,7 @@ void VideoOutput::InitRendering()
     
     // allocate memory for vertex indices in the GPU
     // (vertices are given as triangle strip pairs)
+    LOG( "Initializing vertex index buffer" );
     glBindBuffer( GL_ELEMENT_ARRAY_BUFFER, VBOIndices );
     
     glBufferData
@@ -421,20 +435,38 @@ void VideoOutput::CreateWhiteTexture()
 
 // -----------------------------------------------------------------------------
 
+void VideoOutput::ReleaseTexture( GLuint& OpenGLTextureID )
+{
+    // this check should not be needed, but for some reason
+    // glDeleteTextures will crash on MacOS without it
+    if( OpenGLTextureID != 0 )
+    {
+        LOG( "Releasing OpenGL texture with ID = " + to_string(OpenGLTextureID) );
+        glDeleteTextures( 1, &OpenGLTextureID );
+    }
+    
+    OpenGLTextureID = 0;
+}
+
+// -----------------------------------------------------------------------------
+
 void VideoOutput::Destroy()
 {
-    // release all textures
-    UnloadTexture( BiosTextureID );
-    UnloadTexture( WhiteTextureID );
+    LOG( "Destroying video context" );
     
-    for( int i = 0; i < Constants::GPUMaximumCartridgeTextures; i++ )
-      if( CartridgeTextureIDs[ i ] != 0 )
-        UnloadTexture( CartridgeTextureIDs[ i ] );
+    // release all textures
+    LOG( "Releasing all textures" );
+    ReleaseTexture( WhiteTextureID );
+    
+    for( int i = -1; i < Constants::GPUMaximumCartridgeTextures; i++ )
+      UnloadTexture( i );
     
     // delete our buffers
+    LOG( "Deleting OpenGL vertex buffers" );
     glDeleteBuffers( 1, &VBOVertexInfo );
     glDeleteBuffers( 1, &VBOIndices );
     
+    LOG( "Destroying OpenGL vertex arrays" );
     #if defined(EMUELEC) || defined(HAVE_OPENGLES2)
       glDeleteVertexArraysOES( 1, &VAO );
     #else
@@ -442,6 +474,7 @@ void VideoOutput::Destroy()
     #endif
     
     // delete our shader program
+    LOG( "Deleting shader program" );
     glDeleteProgram( ShaderProgramID );
 }
 
@@ -670,6 +703,8 @@ void VideoOutput::ClearScreen( GPUColor ClearColor )
 
 void VideoOutput::LoadTexture( int GPUTextureID, void* Pixels )
 {
+    LOG( "Loading texture with ID = " + to_string(GPUTextureID) );
+    
     GLuint* OpenGLTextureID = &BiosTextureID;
     
     if( GPUTextureID >= 0 )
@@ -717,17 +752,10 @@ void VideoOutput::LoadTexture( int GPUTextureID, void* Pixels )
 
 void VideoOutput::UnloadTexture( int GPUTextureID )
 {
-    GLuint* OpenGLTextureID = &BiosTextureID;
-    
     if( GPUTextureID >= 0 )
-      OpenGLTextureID = &CartridgeTextureIDs[ GPUTextureID ];
-    
-    // this check should not be needed, but for some reason
-    // glDeleteTextures will crash on MacOS without it
-    if( *OpenGLTextureID != 0 )
-      glDeleteTextures( 1, OpenGLTextureID );
-    
-    *OpenGLTextureID = 0;
+      ReleaseTexture( CartridgeTextureIDs[ GPUTextureID ] );
+    else
+      ReleaseTexture( BiosTextureID );
 }
 
 // -----------------------------------------------------------------------------

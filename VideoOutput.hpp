@@ -70,6 +70,7 @@ class VideoOutput
         bool CompileShaderProgram();
         void UseShaderProgram();
         void CreateWhiteTexture();
+        void ReleaseTexture( GLuint& OpenGLTextureID );
         void InitRendering();
         void Destroy();
         

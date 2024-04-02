@@ -156,6 +156,12 @@ VideoOutput::VideoOutput()
     for( int i = 0; i < Constants::GPUMaximumCartridgeTextures; i++ )
       CartridgeTextureIDs[ i ] = 0;
     
+    // all OpenGL IDs are initially 0
+    VAO = 0;
+    VBOVertexInfo = 0;
+    VBOIndices = 0;
+    ShaderProgramID = 0;
+    
     // initialize vertex indices; they are organized
     // assuming each quad will be given as 4 vertices,
     // as in a GL_TRIANGLE_STRIP

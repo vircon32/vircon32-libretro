@@ -290,13 +290,6 @@ bool VideoOutput::CompileShaderProgram()
 
 // -----------------------------------------------------------------------------
 
-void VideoOutput::UseShaderProgram()
-{
-    glUseProgram( ShaderProgramID );
-}
-
-// -----------------------------------------------------------------------------
-
 void VideoOutput::InitRendering()
 {
     LOG( "Initializing rendering" );
@@ -471,6 +464,7 @@ void VideoOutput::Destroy()
     LOG( "Deleting OpenGL vertex buffers" );
     glDeleteBuffers( 1, &VBOVertexInfo );
     glDeleteBuffers( 1, &VBOIndices );
+    VBOVertexInfo = VBOIndices = 0;
     
     LOG( "Destroying OpenGL vertex arrays" );
     #if defined(EMUELEC) || defined(HAVE_OPENGLES2)
@@ -478,10 +472,17 @@ void VideoOutput::Destroy()
     #else
       glDeleteVertexArrays( 1, &VAO );
     #endif
+    VAO = 0;
     
     // delete our shader program
     LOG( "Deleting shader program" );
-    glDeleteProgram( ShaderProgramID );
+    
+    // these checks should not be needed but Lakka seems to crash here
+    if( glIsProgram( ShaderProgramID ) && glDeleteProgram )
+    {
+        glDeleteProgram( ShaderProgramID );
+        ShaderProgramID = 0;
+    }
 }
 
 
@@ -503,7 +504,7 @@ void VideoOutput::RenderToFramebuffer()
 
 void VideoOutput::BeginFrame()
 {
-    UseShaderProgram();
+    glUseProgram( ShaderProgramID );
     RenderToFramebuffer();
     glEnable( GL_BLEND );
     SelectTexture( SelectedTexture );

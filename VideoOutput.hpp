@@ -68,7 +68,6 @@ class VideoOutput
         
         // context handling
         bool CompileShaderProgram();
-        void UseShaderProgram();
         void CreateWhiteTexture();
         void ReleaseTexture( GLuint& OpenGLTextureID );
         void InitRendering();

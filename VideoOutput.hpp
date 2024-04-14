@@ -51,6 +51,7 @@ class VideoOutput
         GLuint VBOVertexInfo;
         GLuint VBOIndices;
         GLuint ShaderProgramID;
+        bool IsInitialized;
         
         // rendering control for quad groups
         int QueuedQuads;

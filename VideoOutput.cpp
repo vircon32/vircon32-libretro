@@ -161,6 +161,7 @@ VideoOutput::VideoOutput()
     VBOVertexInfo = 0;
     VBOIndices = 0;
     ShaderProgramID = 0;
+    IsInitialized = false;
     
     // initialize vertex indices; they are organized
     // assuming each quad will be given as 4 vertices,
@@ -391,6 +392,7 @@ void VideoOutput::InitRendering()
     );
     
     LOG( "Finished initializing rendering" );
+    IsInitialized = true;
 }
 
 // -----------------------------------------------------------------------------
@@ -451,6 +453,10 @@ void VideoOutput::ReleaseTexture( GLuint& OpenGLTextureID )
 
 void VideoOutput::Destroy()
 {
+    // prevent calling GL functions with no context active
+    if( !IsInitialized )
+      return;
+    
     LOG( "Destroying video context" );
     
     // release all textures
@@ -476,13 +482,10 @@ void VideoOutput::Destroy()
     
     // delete our shader program
     LOG( "Deleting shader program" );
+    glDeleteProgram( ShaderProgramID );
+    ShaderProgramID = 0;
     
-    // these checks should not be needed but Lakka seems to crash here
-    if( glIsProgram( ShaderProgramID ) && glDeleteProgram )
-    {
-        glDeleteProgram( ShaderProgramID );
-        ShaderProgramID = 0;
-    }
+    IsInitialized = false;
 }
 
 

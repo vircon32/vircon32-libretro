@@ -216,7 +216,7 @@ void retro_get_system_info( struct retro_system_info *info )
 {
     memset( info, 0, sizeof( *info ) );
     info->library_name     = "Vircon32";
-    info->library_version  = "2023.08.24";
+    info->library_version  = "2024.04.14";
     info->need_fullpath    = true;          // games can be too large to hold in memory
     info->valid_extensions = "v32|V32";     // target system may be case sensitive
 }

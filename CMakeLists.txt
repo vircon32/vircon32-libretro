@@ -54,6 +54,11 @@ elseif(ANDROID_ABI)
 elseif(IOS)
     set(ENABLE_OPENGLES3 1)
 
+# for aarch64 we need to manually tell it how to find GLES2
+elseif(AARCH64)
+    set(ENABLE_OPENGLES2 1)
+    set(OPENGL_LIBRARIES GLESv2)
+
 # for other systems we need to search for OpenGL
 else()
     # Try to find OpenGL along with everything it needs
@@ -76,7 +81,10 @@ endif()
 #   DEFINE PROJECT STRUCTURE
 
 # Define folders where compiler should look for includes
-include_directories(${OPENGL_INCLUDE_DIR} OpenGLHeaders)
+# (but avoid the normal GL headers for aarch64)
+if(NOT AARCH64)
+    include_directories(${OPENGL_INCLUDE_DIR} OpenGLHeaders)
+endif()
 include_directories(.)
 
 # On ARM systems (typically phones, RPi, or embedded devices)

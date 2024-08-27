@@ -124,6 +124,7 @@ set(SOURCE_FILES
     Globals.cpp
     libretro.cpp
     Logging.cpp
+    Savestates.cpp
     VideoOutput.cpp
     ${CONSOLE_LOGIC_SRC}
     ${GLSYM_SRC})

@@ -12,6 +12,7 @@
     #include "VideoOutput.hpp"
     #include "Globals.hpp"
     #include "Logging.hpp"
+    #include "Savestates.hpp"
     
     // include C/C++ headers
     #include <stdio.h>
@@ -216,7 +217,7 @@ void retro_get_system_info( struct retro_system_info *info )
 {
     memset( info, 0, sizeof( *info ) );
     info->library_name     = "Vircon32";
-    info->library_version  = "2024.04.14";
+    info->library_version  = "2024.08.28";
     info->need_fullpath    = true;          // games can be too large to hold in memory
     info->valid_extensions = "v32|V32";     // target system may be case sensitive
 }
@@ -630,6 +631,17 @@ bool retro_load_game( const struct retro_game_info *info )
     // before loading ensure that config variables are updated
     update_config_variables();
     
+    // define the quircks of our serialization
+    uint64_t SerializationQuirks =
+    (
+        // Vircon32 states will be dependent on endianness,
+        // but they should not depend on the platform or be
+        // tied to a particular game session
+        RETRO_SERIALIZATION_QUIRK_ENDIAN_DEPENDENT
+    );
+    
+    environ_cb( RETRO_ENVIRONMENT_SET_SERIALIZATION_QUIRKS, &SerializationQuirks );
+    
     // for OpenGL we will normally want 32bpp color format
     enum retro_pixel_format fmt = RETRO_PIXEL_FORMAT_XRGB8888;
     
@@ -711,34 +723,50 @@ size_t retro_get_memory_size( unsigned id )
 
 
 // =============================================================================
-//      HANDLING SAVE-STATES (NOT SUPPORTED)
+//      HANDLING SAVE-STATES
 // =============================================================================
 
 
 size_t retro_serialize_size()
 {
-    // not implemented
-    return 0;
+    // savestates may be a different size for each
+    // game, that is fine by libretro as long as
+    // that size is always the same for each game
+    unsigned UnusedCartridgeTextures = V32::Constants::GPUMaximumCartridgeTextures;
+    
+    if( Console.HasCartridge() )
+      UnusedCartridgeTextures -= Console.GPU.LoadedCartridgeTextures;
+    
+    LOG( std::to_string( sizeof( ConsoleState ) - UnusedCartridgeTextures * sizeof( V32::GPUTexture ) ) );
+    return sizeof( ConsoleState ) - UnusedCartridgeTextures * sizeof( V32::GPUTexture );
 }
 
 // -----------------------------------------------------------------------------
 
-bool retro_serialize(void *data, size_t size )
+bool retro_serialize( void *data, size_t size )
 {
-    // not implemented
-    (void)data;
-    (void)size;
-    return false;
+    // check that received buffer size is enough
+    if( size < retro_serialize_size() )
+    {
+        LOG( "ERROR: Buffer to serialize has not enough capacity" );
+        return false;
+    }
+    
+    return SaveState( (ConsoleState*)data );
 }
 
 // -----------------------------------------------------------------------------
 
 bool retro_unserialize( const void *data, size_t size )
 {
-    // not implemented
-    (void)data;
-    (void)size;
-    return false;
+    // check that received buffer size is enough
+    if( size < retro_serialize_size() )
+    {
+        LOG( "ERROR: Buffer to unserialize has not enough capacity" );
+        return false;
+    }
+    
+    return LoadState( (const ConsoleState*)data );
 }
 
 

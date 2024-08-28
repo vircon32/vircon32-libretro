@@ -1,8 +1,35 @@
 # vircon32-libretro
 
-This is a libretro core for Vircon32. It will allow you to play Vircon32 games using some kind of libretro front-end, such as RetroArch. This is not a stand-alone program! You will also need to place the Vircon32 BIOS file in RetroArch's system directory.
+This is a libretro core to emulate Vircon32 game console. This is not a stand-alone program! You will need to use some kind of libretro front-end, such as RetroArch. Then, by installing this core, you will be able to play Vircon32 games on it.
 
-----------------------------------
+If you didn't know about Vircon32, you can learn about it on its website: [vircon32.com](https://www.vircon32.com).
+
+-----------------
+### Core features
+
+- Game compatibility should be 100%.
+- The core embeds the Standard Vircon32 BIOS v1.2. Thereis no need to download it separately.
+- Alternative BIOSes are also supported. For this, place your BIOS rom file in RetroArch's system directory under the name Vircon32Bios.v32.
+- There is a core option to enable automatic frameskip. Use this to reduce slowdown if needed. However it can cause some stutter or small inaccuracies so it is recommended to leave it off (this is the default).
+- The core supports savestates and rewinding.
+- Netplay might be possible too, though this is untested.
+
+Savestates in this core lack one feature: they don't save the screen contents. This is done on purpose: saving and redrawing the screen would add significant size and complexity. However, since almost all games will redraw the screen every frame, this limitation should not affect players in practice.
+
+--------------------------------
+### Requirements to run the core
+
+This core currently requires devices to support OpenGL 3.0 or greater to work. It can also work with OpenGL ES 2.0 and 3.0. In terms of performance, some of the more elaborate games can get a bit demanding. For reference, in theory a Raspberry Pi 4 should be able to run any game.
+
+The Vircon32 core is currently supported in at least these libretro systems:
+
+- RetroArch
+- Lakka
+- EmuELEC
+- AmberELEC
+- EmuVR
+
+---------------------------------
 ### How to build from source code
 
 This core is built using CMake, so the typical sequence is to build the library in a subfolder like this:
@@ -60,19 +87,4 @@ This core uses OpenGL for graphics. The default build command shown above will m
 For OpenGL ES 2: cmake -DENABLE_OPENGLES2=1 ..
 For OpenGL ES 3: cmake -DENABLE_OPENGLES3=1 ..
 
-The Raspberry Pi 4 will build the core just fine without these flags, but for the core to run it seems to require using GLES3.
-
---------------------------------
-### Requirements to run the core
-
-This core will need the standard Vircon32 BIOS file (StandardBios.v32).
-You can download it here: https://github.com/vircon32/ConsoleSoftware/releases/tag/bios-v1.1
-
-The BIOS file needs to be placed in RetroArch's system directory.
-The typical directories for this are:
-
-- On Windows (64 bit):  C:/Program Files/RetroArch/system
-- On Windows (32 bit):  C:/Program Files(x86)/RetroArch/system
-- On Linux:  /home/${USER}/.config/retroarch/system
-- On MacOS:  /Users/${USER}/Library/Application Support/RetroArch/system
-
+Note that on the Raspberry Pi 4, while the core will build fine without these flags, it still won't run correctly unless the GLES3 flag is used.

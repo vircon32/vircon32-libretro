@@ -23,11 +23,11 @@ This core currently requires devices to support OpenGL 3.0 or greater to work. I
 
 The Vircon32 core is currently supported in at least these libretro systems:
 
-- RetroArch
-- Lakka
-- EmuELEC
-- AmberELEC
-- EmuVR
+- [AmberELEC](https://amberelec.org)
+- [EmuELEC](https://emuelec.org)
+- [EmuVR](https://www.emuvr.net)
+- [Lakka](https://www.lakka.tv)
+- [RetroArch](https://www.retroarch.com)
 
 ---------------------------------
 ### How to build from source code

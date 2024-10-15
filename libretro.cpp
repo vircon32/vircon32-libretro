@@ -177,7 +177,7 @@ void configure_frameskip()
 // configuration variables for this core
 struct retro_variable config_variables[] =
 {
-    { "enable_frameskip", "Automatic frame skip; Disabled|Enabled" },
+    { "vircon32_enable_frameskip", "Automatic frame skip; Disabled|Enabled" },
     { nullptr, nullptr }
 };
 
@@ -188,7 +188,7 @@ static void update_config_variables()
     // use this to ask frontend for a variable value
     struct retro_variable variable_state =
     {
-        "enable_frameskip", nullptr
+        "vircon32_enable_frameskip", nullptr
     };
     
     if( environ_cb( RETRO_ENVIRONMENT_GET_VARIABLE, &variable_state ) && variable_state.value )

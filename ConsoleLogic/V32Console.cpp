@@ -261,6 +261,9 @@ namespace V32
         // now load the bios from the stream
         LoadBiosData( FileInput );
         
+        // save the file name
+        BiosFileName = GetPathFileName( FilePath );
+        
         // close the file
         FileInput.close();
     }
@@ -431,6 +434,12 @@ namespace V32
         // discard the temporary buffer
         LoadedSound.clear();
         
+        // only when loading was successful:
+        // copy BIOS metadata
+        BiosTitle = ROMHeader.Title;
+        BiosVersion = ROMHeader.ROMVersion;
+        BiosRevision = ROMHeader.ROMRevision;
+        
         // report success
         Callbacks::LogLine( "Finished loading BIOS" );
     }
@@ -445,6 +454,10 @@ namespace V32
         
         // release bios program ROM
         BiosProgramROM.Disconnect();
+        BiosFileName = "";
+        BiosTitle = "";
+        BiosVersion = 0;
+        BiosRevision = 0;
         
         // release the bios texture
         Callbacks::UnloadBiosTexture();
@@ -718,6 +731,8 @@ namespace V32
         CartridgeController.NumberOfSounds = 0;
         CartridgeController.CartridgeFileName = "";
         CartridgeController.CartridgeTitle = "";
+        CartridgeController.CartridgeVersion = 0;
+        CartridgeController.CartridgeRevision = 0;
         
         // tell GPU to release all cartridge textures
         GPU.RemoveCartridgeTextures();

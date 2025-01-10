@@ -5,6 +5,7 @@
     
     // include Vircon32 headers
     #include "ConsoleLogic/V32Console.hpp"
+    #include "ConsoleLogic/ExternalInterfaces.hpp"
     #include "VirconDefinitions/Constants.hpp"
     #include "VirconDefinitions/Enumerations.hpp"
     
@@ -348,8 +349,8 @@ void retro_run()
 bool FileExists( const string& FilePath )
 {
     ifstream TestedFile;
-    TestedFile.open( FilePath );
-
+    V32::OpenInputFile( TestedFile, FilePath );
+    
     return (bool)TestedFile;
 }
 

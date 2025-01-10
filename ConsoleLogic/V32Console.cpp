@@ -11,12 +11,6 @@
     // include C/C++ headers
     #include <cstring>          // [ ANSI C ] Strings
     
-    // these are only needed to treat UTF-16 file paths
-    #if defined(__WIN32__)
-      #include <locale>         // [ C++ STL ] Locales
-      #include <codecvt>        // [ C++ STL ] Encoding conversions
-    #endif
-    
     // declare used namespaces
     using namespace std;
 // *****************************************************************************
@@ -244,28 +238,20 @@ namespace V32
         Callbacks::LogLine( "File path: \"" + FilePath + "\"" );
         
         // open bios file
-        ifstream FileInput;
+        ifstream InputFile;
+        OpenInputFile( InputFile, FilePath, ios_base::binary | ios_base::ate );
         
-        // on windows convert path from UTF-8 to UTF-16
-        #if defined(__WIN32__)
-          wstring_convert< std::codecvt_utf8_utf16< wchar_t > > converter;
-          wstring FilePathUTF16 = converter.from_bytes(FilePath);
-          FileInput.open( FilePathUTF16.c_str(), ios_base::binary | ios_base::ate );
-        #else
-          FileInput.open( FilePath, ios_base::binary | ios_base::ate );
-        #endif
-        
-        if( FileInput.fail() )
+        if( InputFile.fail() )
           Callbacks::ThrowException( "Cannot open BIOS file" );
         
         // now load the bios from the stream
-        LoadBiosData( FileInput );
+        LoadBiosData( InputFile );
         
         // save the file name
         BiosFileName = GetPathFileName( FilePath );
         
         // close the file
-        FileInput.close();
+        InputFile.close();
     }
     
     // -----------------------------------------------------------------------------
@@ -489,15 +475,7 @@ namespace V32
         
         // open cartridge file
         ifstream InputFile;
-        
-        // on windows convert path from UTF-8 to UTF-16
-        #if defined(__WIN32__)
-          wstring_convert< std::codecvt_utf8_utf16< wchar_t > > converter;
-          wstring FilePathUTF16 = converter.from_bytes(FilePath);
-          InputFile.open( FilePathUTF16.c_str(), ios_base::binary | ios_base::ate );
-        #else
-          InputFile.open( FilePath, ios_base::binary | ios_base::ate );
-        #endif
+        OpenInputFile( InputFile, FilePath, ios_base::binary | ios_base::ate );
         
         if( InputFile.fail() )
           Callbacks::ThrowException( "Cannot open cartridge file" );
@@ -778,15 +756,7 @@ namespace V32
         
         // open the file
         ofstream OutputFile;
-        
-        // on windows convert path from UTF-8 to UTF-16
-        #if defined(__WIN32__)
-          wstring_convert< std::codecvt_utf8_utf16< wchar_t > > converter;
-          wstring FilePathUTF16 = converter.from_bytes(FilePath);
-          OutputFile.open( FilePathUTF16.c_str(), ios_base::binary | ios::trunc );
-        #else
-          OutputFile.open( FilePath, ios_base::binary | ios::trunc );
-        #endif
+        OpenOutputFile( OutputFile, FilePath, ios_base::binary | ios::trunc );
         
         if( OutputFile.fail() )
           Callbacks::ThrowException( "Cannot create memory card file" );
@@ -816,15 +786,7 @@ namespace V32
         
         // open the file for random access
         fstream& InputFile = MemoryCardController.LinkedFile;
-        
-        // on windows convert path from UTF-8 to UTF-16
-        #if defined(__WIN32__)
-          wstring_convert< std::codecvt_utf8_utf16< wchar_t > > converter;
-          wstring FilePathUTF16 = converter.from_bytes(FilePath);
-          InputFile.open( FilePathUTF16.c_str(), ios_base::in | ios_base::out | ios::binary | ios::ate );
-        #else
-          InputFile.open( FilePath, ios_base::in | ios_base::out | ios::binary | ios::ate );
-        #endif
+        OpenInputOutputFile( InputFile, FilePath, ios_base::in | ios_base::out | ios::binary | ios::ate );
         
         if( InputFile.fail() )
           Callbacks::ThrowException( "Cannot open memory card file" );

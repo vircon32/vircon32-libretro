@@ -737,7 +737,6 @@ size_t retro_serialize_size()
     if( Console.HasCartridge() )
       UnusedCartridgeTextures -= Console.GPU.LoadedCartridgeTextures;
     
-    LOG( std::to_string( sizeof( ConsoleState ) - UnusedCartridgeTextures * sizeof( V32::GPUTexture ) ) );
     return sizeof( ConsoleState ) - UnusedCartridgeTextures * sizeof( V32::GPUTexture );
 }
 

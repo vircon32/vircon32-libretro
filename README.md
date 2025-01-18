@@ -4,17 +4,26 @@ This is a libretro core to emulate Vircon32 game console. This is not a stand-al
 
 If you didn't know about Vircon32, you can learn about it on its website: [vircon32.com](https://www.vircon32.com).
 
+Here are some examples of Vircon32 games (size here is 50%):
+
+![screenshots](Images/GameScreenshots.jpg)
+
 -----------------
 ### Core features
 
 - Game compatibility should be 100%.
-- The core embeds the Standard Vircon32 BIOS v1.2. Thereis no need to download it separately.
+- The core embeds the Standard Vircon32 BIOS v1.2. There is no need to download it separately.
 - Alternative BIOSes are also supported. For this, place your BIOS rom file in RetroArch's system directory under the name Vircon32Bios.v32.
 - There is a core option to enable automatic frameskip. Use this to reduce slowdown if needed. However it can cause some stutter or small inaccuracies so it is recommended to leave it off (this is the default).
 - The core supports savestates and rewinding.
-- Netplay might be possible too, though this is untested.
+- It is not clear if netplay is possible. This is untested.
 
-Savestates in this core lack one feature: they don't save the screen contents. This is done on purpose: saving and redrawing the screen would add significant size and complexity. However, since almost all games will redraw the screen every frame, this limitation should not affect players in practice.
+-----------------
+### Known issues
+
+Savestates in this core lack one feature: they don't save the screen contents. This is done on purpose: saving and redrawing the screen in savestates would add significant size and complexity. That increase would most likely prevent the use of rewinding, which requires to save/load states every frame.
+
+Most Vircon32 games redraw the screen every frame, so this limitation will not affect them. But in some games, especially puzzles, the screen is not redrawn until you make a move. So when a state for those games is loaded, it may seem like nothing has happened until some button is pressed.
 
 --------------------------------
 ### Requirements to run the core

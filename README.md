@@ -33,10 +33,20 @@ This core currently requires devices to support OpenGL 3.0 or greater to work. I
 The Vircon32 core is currently supported in at least these libretro systems:
 
 - [AmberELEC](https://amberelec.org)
+- [ArkOS](https://github.com/christianhaitian/arkos/wiki)
+- [Batocera](https://batocera.org)
 - [EmuELEC](https://emuelec.org)
+- [EmulationStation](https://emulationstation.org/)
+- [ES-DE](https://es-de.org/)
 - [EmuVR](https://www.emuvr.net)
+- [JELOS](https://github.com/JustEnoughLinuxOS)
 - [Lakka](https://www.lakka.tv)
+- [MuOS](https://muos.dev/)
 - [RetroArch](https://www.retroarch.com)
+- [RetroBat](https://www.retrobat.org)
+- [RetroDECK](https://retrodeck.net/)
+- [ROCKNIX](https://rocknix.org/)
+
 
 ---------------------------------
 ### How to build from source code

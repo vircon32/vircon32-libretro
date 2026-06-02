@@ -26,6 +26,11 @@ embed_binaries(EmbeddedAssets
         NAME "StandardBios"
         PATH "Assets/StandardBios.v32")
 
+if(CMAKE_CXX_COMPILER MATCHES "webos" OR
+   CMAKE_CXX_COMPILER MATCHES "starfish")
+	set(WEBOS ON)
+endif()
+
 # -----------------------------------------------------
 #   FINDING PROJECT DEPENDENCIES
 
@@ -53,6 +58,10 @@ elseif(ANDROID_ABI)
 # for IOS we will also link against GLES3, but in a different way
 elseif(IOS)
     set(ENABLE_OPENGLES3 1)
+
+elseif(WEBOS)
+    set(ENABLE_OPENGLES2 1)
+    set(OPENGL_LIBRARIES GLESv2)
 
 # for other systems we need to search for OpenGL
 else()

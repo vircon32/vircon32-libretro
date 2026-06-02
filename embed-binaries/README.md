@@ -3,6 +3,15 @@
 Easy-to-use CMake utility to generate C/C++ code containing binary data from files.
 Useful when you want to avoid shipping extra files, but you want to still have them separately during development.
 
+## IMPORTANT NOTE
+
+If you are using either C++26 or newer, or C23 or newer, I _strongly_ suggest you try using `#embed`:
+
+* `#embed` (C++26): <https://en.cppreference.com/w/cpp/preprocessor/embed>
+* `#embed` (C23): <https://en.cppreference.com/w/c/preprocessor/embed>
+
+It has compiler support, so it's fast and it even has more features. Go upgrade your compiler. Enjoy (no need to thank me, thank compiler writers as well as the C and C++ standards committees).
+
 ## Features
 
 * Generates C/C++ source files with arrays containing binary data

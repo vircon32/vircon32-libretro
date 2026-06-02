@@ -232,12 +232,35 @@ endfunction()
 
 # Running in script mode
 # https://stackoverflow.com/questions/51427538/cmake-test-if-i-am-in-scripting-mode
-if(CMAKE_SCRIPT_MODE_FILE AND NOT CMAKE_PARENT_LIST_FILE)
-    foreach(variable "asset_name" "asset_path" "byte_type" "constexpr" "null_terminate" "generated_header_path" "generated_implementation_path")
-        if (NOT DEFINED ${variable})
-            message(FATAL_ERROR "'${variable}' is not defined")
-        endif()
-    endforeach()
+#
+# Regarding issue #1 (https://github.com/andoalon/embed-binaries/issues/1):
+# The check suggested in the post above is `if(CMAKE_SCRIPT_MODE_FILE AND NOT CMAKE_PARENT_LIST_FILE)`,
+# but that stopped working at some point in CMake >4.1.1 && <=4.2.1 (probably 4.2),
+#
+# The issue is that, although the documentation states otherwise (at least as I understand it),
+# `CMAKE_PARENT_LIST_FILE` is in fact defined when running in script mode.
+# In my testing, it pointed at a non-existing "CMakeLists.txt" file in ${CMAKE_BINARY_DIR}
+#
+# The documentation states (https://cmake.org/cmake/help/latest/variable/CMAKE_PARENT_LIST_FILE.html):
+# "While processing a cmake -P script, this variable is not defined in the outermost script."
+# I think in our case this file should be the outermost one, but... who knows.
+#
+# So the proper check, in my opinion, is to either:
+# * Check 'CMAKE_SCRIPT_MODE_FILE' points at the current file (https://cmake.org/cmake/help/latest/variable/CMAKE_SCRIPT_MODE_FILE.html)
+#   * Checking whether it's empty would probably also do the trick but let's be specific
+# * Check whether the global property 'CMAKE_ROLE' is "SCRIPT" (https://cmake.org/cmake/help/latest/prop_gbl/CMAKE_ROLE.html)
+#   * This would be equivalent to checking whether 'CMAKE_SCRIPT_MODE_FILE' is empty
+#   * Since it's a property, we need to first get it, which forces us to create a variable, which would in this case pollute the global namespace
+if(CMAKE_SCRIPT_MODE_FILE)
+	if(NOT CMAKE_SCRIPT_MODE_FILE STREQUAL "${_path_to_embed_binary_myself}")
+		message(WARNING "Including 'embed-binaries.cmake' while in script mode, but it's not the main file, skipping embedding step.\nIn order to silence this warning, please avoid including 'embed-binaries.cmake' while in script mode.\nIf you intended to embed an asset, this is a bug, please create an issue in GitHub")
+	else()
+		foreach(variable "asset_name" "asset_path" "byte_type" "constexpr" "null_terminate" "generated_header_path" "generated_implementation_path")
+			if (NOT DEFINED ${variable})
+				message(FATAL_ERROR "'${variable}' is not defined")
+			endif()
+		endforeach()
 
-    write_embedded_binary_code("${asset_name}" "${asset_path}" "${byte_type}" "${constexpr}" "${null_terminate}" "${generated_header_path}" "${generated_implementation_path}")
+		write_embedded_binary_code("${asset_name}" "${asset_path}" "${byte_type}" "${constexpr}" "${null_terminate}" "${generated_header_path}" "${generated_implementation_path}")
+	endif()
 endif()

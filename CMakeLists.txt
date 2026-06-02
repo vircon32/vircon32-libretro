@@ -2,7 +2,7 @@
 #   DECLARE THE PROJECT
 
 # minimum version of CMake that can parse this file
-cmake_minimum_required(VERSION 2.8.12...3.19.1)
+cmake_minimum_required(VERSION 3.17.5)
 
 # By default, project configuration will be Release
 # (must be done before project() statement)

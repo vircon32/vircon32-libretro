@@ -168,8 +168,11 @@ bool LoadGPUState( const GPUState& State )
     // copy the BIOS texture
     memcpy( &GPU.BiosTexture, &State.BiosTexture, sizeof(GPUTexture) );
     
-    // copy only the needed cartridge textures
-    unsigned TexturesSize = sizeof(GPUTexture) * GPU.LoadedCartridgeTextures;
+    // copy only the needed cartridge textures (capped to array bounds)
+    unsigned LoadCount = GPU.LoadedCartridgeTextures;
+    if( LoadCount > V32::Constants::GPUMaximumCartridgeTextures )
+      LoadCount = V32::Constants::GPUMaximumCartridgeTextures;
+    unsigned TexturesSize = sizeof(GPUTexture) * LoadCount;
     memcpy( &GPU.CartridgeTextures[ 0 ], State.CartridgeTextures, TexturesSize );
     
     // update GPU pointers for the loaded selections

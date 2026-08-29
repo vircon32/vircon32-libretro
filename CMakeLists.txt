@@ -63,6 +63,12 @@ elseif(WEBOS)
     set(ENABLE_OPENGLES2 1)
     set(OPENGL_LIBRARIES GLESv2)
 
+# GLES2/GLES3 was explicitly requested (e.g. cross-compiled GLES-only
+# targets such as Lakka on panfrost/lima devices) - skip the desktop
+# OpenGL search entirely
+elseif(ENABLE_OPENGLES2 OR ENABLE_OPENGLES3)
+    message(STATUS "* OPENGL ES will be provided externally")
+
 # for other systems we need to search for OpenGL
 else()
     # Try to find OpenGL along with everything it needs

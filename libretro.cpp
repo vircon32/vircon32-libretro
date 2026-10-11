@@ -431,6 +431,67 @@ void LoadVircon32Bios()
 
 
 // =============================================================================
+//      HANDLING EXPOSED MEMORY MAP AND DESCRIPTORS
+// =============================================================================
+
+
+// Careful: Vircon32 memory addresses refer to 32-bit words
+// but libretro memory descriptors always use byte addresses
+static_assert( sizeof(V32::V32Word) == 4, "Vircon32 words must be exactly 32 bits in size" );
+
+static retro_memory_descriptor MemoryDescriptors[ 2 ];
+static retro_memory_map MemoryMap = { MemoryDescriptors, 0 };
+
+void ClearMemoryMap()
+{
+    MemoryMap.num_descriptors = 0;
+    environ_cb( RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &MemoryMap );
+}
+
+// -----------------------------------------------------------------------------
+
+// The memory in the memory card is intentionally not advertised
+// as RETRO_MEMORY_SAVE_RAM or RETRO_MEMDESC_SAVE_RAM. This is
+// because the management and persistence of .memc files is done
+// within the console logic itself
+void PublishMemoryMap()
+{
+    // refresh all pointers after loading a cartridge or memory card
+    MemoryMap.num_descriptors = 0;
+    
+    // publish main console RAM
+    if( !Console.RAM.Memory.empty() )
+    {
+        retro_memory_descriptor& RAM = MemoryDescriptors[ MemoryMap.num_descriptors++ ];
+        RAM = {};
+        RAM.flags = RETRO_MEMDESC_SYSTEM_RAM;
+        
+        // RAM is the start of the continuous address space
+        // we will expose, so it begins at address 0
+        RAM.ptr = Console.RAM.Memory.data();
+        RAM.start = 0;
+        RAM.len = (size_t)V32::Constants::RAMSize * sizeof( V32::V32Word );
+    }
+    
+    // publish memory car RAM, if available
+    if( Console.HasMemoryCard() && !Console.MemoryCardController.Memory.empty() )
+    {
+        retro_memory_descriptor& Card = MemoryDescriptors[ MemoryMap.num_descriptors++ ];
+        Card = {};
+        
+        // we want external systems to view all Vircon32 memory
+        // as a continuous address space, so we will declare the
+        // start of card card memory right after the end of RAM
+        Card.ptr = Console.MemoryCardController.Memory.data();
+        Card.start = (size_t)V32::Constants::RAMSize * sizeof( V32::V32Word );
+        Card.len = (size_t)V32::Constants::MemoryCardSize * sizeof( V32::V32Word );
+    }
+    
+    environ_cb( RETRO_ENVIRONMENT_SET_MEMORY_MAPS, &MemoryMap );
+}
+
+
+// =============================================================================
 //      HANDLING CONTEXT FOR CORE AND OPENGL
 // =============================================================================
 
@@ -439,6 +500,9 @@ void context_reset()
 {
     LOG( "Received signal: Reset context" );
     rglgen_resolve_symbols( hw_render.get_proc_address );
+    
+    // clear any previous memory map
+    ClearMemoryMap();
     
     // initialize video output
     Video.InitRendering();
@@ -489,6 +553,9 @@ void context_reset()
                 Console.LoadMemoryCard( LoadedMemoryCardPath );
             }
         }
+        
+        // publish memory map only if initializations were successful
+        PublishMemoryMap();
     }
     catch( const exception& e )
     {
@@ -501,6 +568,7 @@ void context_reset()
 void context_destroy()
 {
     LOG( "Received signal: Destroy context" );
+    ClearMemoryMap();
     Console.UnloadCartridge();
     Console.UnloadBios();
     Video.Destroy();
@@ -677,6 +745,11 @@ bool retro_load_game( const struct retro_game_info *info )
         LoadedCartridgePath = "";
     }
     
+    // state RetroAchievements support only when we are
+    // running a game, not when running with just the BIOS
+    bool SupportsAchievements = !LoadedCartridgePath.empty();
+    environ_cb( RETRO_ENVIRONMENT_SET_SUPPORT_ACHIEVEMENTS, &SupportsAchievements );
+    
     return true;
 }
 
@@ -686,6 +759,7 @@ void retro_unload_game()
 {
     LOG( "Received signal: Unload game" );
     
+    ClearMemoryMap();
     Console.UnloadCartridge();
     Console.UnloadMemoryCard();
 }
@@ -703,14 +777,17 @@ bool retro_load_game_special( unsigned type, const struct retro_game_info *info,
 
 
 // =============================================================================
-//      HANDLING INTERNAL MEMORY (NOT SUPPORTED)
+//      EXPOSING INTERNAL MEMORY
 // =============================================================================
 
 
 void *retro_get_memory_data( unsigned id )
 {
-    // not implemented
-    (void)id;
+    if( id == RETRO_MEMORY_SYSTEM_RAM && !Console.RAM.Memory.empty() )
+      return Console.RAM.Memory.data();
+    
+    // the memory card is exposed through RETRO_ENVIRONMENT_SET_MEMORY_MAPS,
+    // not as SAVE_RAM: the .memc files must be managed by the core itself
     return nullptr;
 }
 
@@ -718,7 +795,9 @@ void *retro_get_memory_data( unsigned id )
 
 size_t retro_get_memory_size( unsigned id )
 {
-    // not implemented
+    if( id == RETRO_MEMORY_SYSTEM_RAM )
+      return (size_t)V32::Constants::RAMSize * sizeof( V32::V32Word );
+    
     return 0;
 }
 
